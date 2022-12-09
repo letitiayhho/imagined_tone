@@ -45,43 +45,48 @@ def fixation(WIN, secs):
     return(fixation)
 
 def play_tone(TONE_DUR, ISI, freq, mark):
+    play_sound_with_cue(WIN, TONE_DUR, freq)
+    MARKER.send(mark)
 
-    # Prepare sound and visuals
-    snd = Sound(freq, secs = TONE_DUR)
-    prompt = visual.TextStim(WIN, '*')
-    prompt.draw()
+#     # Prepare sound and visuals
+#     snd = Sound(freq, secs = TONE_DUR)
+#     prompt = visual.TextStim(WIN, '*')
+#     prompt.draw()
     
-    # Play sound
-    now = GetSecs()
-    snd.play(when = now + 0.001)
+#     # Play sound
+#     now = GetSecs()
+#     snd.play(when = now + 0.001)
 
-    # Send marker and update display when tone starts to play
-    WaitSecs(0.001)
-#     MARKER.send(mark)
-    WIN.flip()
+#     # Send marker and update display when tone starts to play
+#     WaitSecs(0.001)
+# #     MARKER.send(mark)
+#     WIN.flip()
     
-    # Turn off visuals after tone is finished playing
-    WaitSecs(TONE_DUR)
-    WIN.flip()
+#     # Turn off visuals after tone is finished playing
+#     WaitSecs(TONE_DUR)
+#     WIN.flip()
     
     # Wait for ISI
     WaitSecs(ISI)
 
-def prompt_imagine_tone(WIN, TONE_DUR, ISI, mark):
+def imagine_tone(WIN, TONE_DUR, ISI, mark):
+    freq = 0
+    play_sound_with_cue(WIN, TONE_DUR, freq)
+    MARKER.send(mark)
 
-    # Prepare visuals
-    prompt = visual.TextStim(WIN, '*')
-    prompt.draw()
-    now = GetSecs()
+#     # Prepare visuals
+#     prompt = visual.TextStim(WIN, '*')
+#     prompt.draw()
+#     now = GetSecs()
 
-    # Prompt subject to imagine tone
-    WaitSecs(0.001)
-#     MARKER.send(mark)
-    WIN.flip()
+#     # Prompt subject to imagine tone
+#     WaitSecs(0.001)
+# #     MARKER.send(mark)
+#     WIN.flip()
     
-    # Turn off visuals 
-    WaitSecs(TONE_DUR)
-    WIN.flip()
+#     # Turn off visuals 
+#     WaitSecs(TONE_DUR)
+#     WIN.flip()
     
     # Wait for ISI
     WaitSecs(ISI)
@@ -109,7 +114,7 @@ def get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL):
 
     for i in range(TONES_PER_TRIAL):
         mark = get_mark(index, heard = False)
-        prompt_imagine_tone(WIN, TONE_DUR, ISI, mark)
+        imagine_tone(WIN, TONE_DUR, ISI, mark)
         
         freqs.append(freq)
         marks.append(mark)

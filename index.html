@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reading Experiment</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="jspsych-6.1.0/jspsych.js"></script>
+    <script type="text/javascript" src="lib/jspsych-pavlovia-3.0.0.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-html-button-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-instructions.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-external-html.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-survey-multi-choice.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-survey-likert.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-audio-button-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-audio-keyboard-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-html-audio-response.js"></script>
+
+    <link href="jspsych-6.1.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+  </head>
+  <body></body>
+  <script>
+
+var all_audio = ["sound/2e.wav", "sound/s1.wav", "sound/s2.wav", "sound/s3.wav", "sound/s4.wav", "sound/s5.wav", "sound/s6.wav", "sound/s7.wav", "sound/s8.wav", "sound/s9.wav", "sound/s10.wav"]
+
+var subject_id = jsPsych.randomization.randomID(15); //randomized ID
+var tnum = 1; //trial counter for production
+var pnum = 1; //trial counter for perception
+
+jsPsych.data.addProperties({
+  subject: subject_id
+});
+
+/* timeline created */
+var timeline = [];
+
+/* Open Connection with Pavlovia */
+var pavlovia_init = {
+type: "pavlovia",
+command: "init"
+};
+
+timeline.push(pavlovia_init);
+
+/* welcome the user */
+var LOI = {
+	type: 'instructions',
+	pages: [
+        'Welcome to the study. On the next page, you will see the <b>Consent Form</b>. Please read this document carefully before agreeing to participate in the study.',
+        '<p>Please read this Consent Form. You may download this form if you wish. When you are ready to continue, scroll to the bottom of the page and click "Next".</p><embed src="consent/consent_form.pdf" width="800px" height="2100px" />'
+    ],
+  show_clickable_nav: true,
+	allow_backward: false
+};
+
+timeline.push(LOI);
+
+var consentform = {
+	type: 'html-button-response',
+	stimulus: 'I agree to take part in this experiment.',
+	choices: ['Yes', 'No'],
+	on_finish: function(data) {
+      		if (data.button_pressed == 1) {
+        		jsPsych.endExperiment('You chose not to take part in this experiment. Thank you for your time.');
+      }
+    }
+	};
+timeline.push(consentform);
+
+/* Quiet instructions */
+
+var quiet_instructions = {
+	type: 'instructions',
+	pages: [
+		'Thank you for participating in our study. This study involves several auditory tasks followed by a survey.',
+		'It is very important to us that you complete this study appropriately.'+
+		'<p>Please complete this study in a quiet place with minimal distractions. Please turn off any cell phone or laptop notifications. </p>'+
+		'<p>Please try to use headphones/earphones when completing this study.</p>'
+		],
+		show_clickable_nav: true
+	};
+	timeline.push(quiet_instructions);
+
+var quiet1 = {
+        type: 'survey-multi-choice',
+        questions: [
+           {prompt: "<p>If possible, we ask that you perform this experiment in a quiet place and minimize distractions in order to ensure that we collect the most accurate data we can.</p>" +
+	"<p>If you are not in a quiet place, please take a moment to find one.</p>" +
+	"<p>Nevertheless, we ask that you answer the following question honestly:</p>"+
+	"<p>Are you in a quiet place?</p>",
+            options: ["I am in a quiet place", "I am NOT in a quiet place"],
+	required: true}
+        ],
+    }
+    timeline.push(quiet1);
+
+    var not_quiet = {
+        type:       'survey-likert',
+        questions:  [ {prompt: "<p>You indicated that you are not in a quiet place.</p>"+
+				"<p>We value your honesty above all else and you will receive your course credit regardless of your response to this question (given that you complete the remainder of the study truthfully and accurately).</p>" +
+				"<p>How quiet is it?</p>",
+	labels: ["Little noise", "Some noise", "Medium noise", "Pretty noisy", "Very noisy"],
+	required: true} ],
+    }
+    var quiet_node = {
+        timeline:               [not_quiet],
+        conditional_function:   function() {
+            var data = jsPsych.data.getLastTrialData().values()[0];
+            if(JSON.parse(data.responses).Q0 == "I am NOT in a quiet place") {
+                return true;
+            } else {
+                return false;
+            }
+        },
+    }
+    timeline.push(quiet_node);
+
+var quiet2 = {
+        type: 'survey-multi-choice',
+        questions: [
+           {
+            prompt: "<p>If possible, we ask that you take a moment to remove any possible distractions (e.g. phone or laptop notifications) from your environment before you complete the rest of the study. Please answer the following question honestly:</p>" +
+			"<p>Did you remove distractions from your environment?</p>",
+            options: ["I removed distractions", "I did NOT remove distractions"],
+		required: true
+            }
+        ],
+    }
+    timeline.push(quiet2);
+
+var repeat = {
+    timeline: [{
+      type: 'audio-button-response',
+      stimulus: 'sound/2e.wav',
+      prompt: "Please take a moment to listen to the sound and adjust your volume so what the person is saying sounds clear. We encourage you to set your volume as loud as you can without it being uncomfortable.",
+      choices: ['Play again','Continue']
+    }],
+    loop_function: function(data){
+      if(data.values()[0].button_pressed == 0){
+          return true;
+      } else {
+          return false;
+      }
+    }
+  };
+timeline.push(repeat);
+
+var baseline_instructions = {
+	type: 'instructions',
+	pages: [
+		'You may now proceed with the study.'+
+		'<p>As a reminder, for this task, you will hear someone say different sounds and you will be asked to judge what sound you heard:</p>'+
+		'<p>	If you hear the sound "ba", please hit the "b" button on your keyboard.</p>'+
+		'<p>	If you hear the sound "wa", please hit the "w" button on your keyboard.</p>'+
+		'<p>You will make 100 total judgments in this part of the study.</p><p>When you are ready to begin the task, you may proceed by pressing the "Next" button below.</p>'
+		],
+		show_clickable_nav: true
+	};
+	timeline.push(baseline_instructions);
+
+var base_stimuli = [
+	{stimulus: "sound/s1.wav"},
+	{stimulus: "sound/s2.wav"},
+	{stimulus: "sound/s3.wav"},
+	{stimulus: "sound/s4.wav"},
+	{stimulus: "sound/s5.wav"},
+	{stimulus: "sound/s6.wav"},
+	{stimulus: "sound/s7.wav"},
+	{stimulus: "sound/s8.wav"},
+	{stimulus: "sound/s9.wav"},
+	{stimulus: "sound/s10.wav"}
+	];
+
+var baseline_trial = {
+	type: "audio-keyboard-response",
+	stimulus: jsPsych.timelineVariable('stimulus'),
+	prompt: function(){return '<p><em>Trial '+pnum+' of 100</em></p><p>What sound did you hear?</p><p>(press "b" if you heard "ba")</br>(press "w" if you heard "wa")</p>';},
+	choices: ['w', 'b'],
+	on_finish: function(){pnum += 1;}
+	};
+
+var confidence_baseline = {
+	type: "survey-likert",
+	questions: [ { prompt: "On a scale of 1-6, 1 being very unsure and 6 very sure, how confident are you in your categorization of the sound you just heard?",
+			labels: ["1","2","3","4","5","6"],
+			required: true } ],
+	}
+
+var baseline_procedure = {
+	timeline: [baseline_trial, confidence_baseline],
+	timeline_variables: base_stimuli,
+	randomize_order: true,
+	repetitions: 10
+	}
+timeline.push(baseline_procedure);
+
+var intermission = {
+	type: "html-keyboard-response",
+	stimulus: "Thank you for completing the first part of our experiment. If you want you may now take a short break. Press Spacebar when you are ready to continue.",
+	choices: [32]
+	};
+	timeline.push(intermission);
+
+var reading_instructions = {
+	type: 'instructions',
+	pages: [
+		'Before continuing, make sure that you have a working microphone or headset plugged into your computer. As we mentioned before, we will be recording audio experiment.',
+		'In this part of the study you will be reading a sentence out loud QUICKLY or SLOWLY.' +
+		'<p>After reading the sentence out loud, you will hear someone say a sound and have to judge what sound you heard.</p>' +
+		'<p>	If you hear the sound "ba", please hit the "b" button on your keyboard</p>'+
+		'<p>	If you hear the sound "wa", please hit the "w" button on your keyboard</p>'+
+		'When you are ready to continue, you may proceed by pressing the "Next" button below.'
+		],
+		show_clickable_nav: true
+	};
+	timeline.push(reading_instructions);
+
+var recording_intro = {
+	type: "html-audio-response",
+	enable_mic_message: false,
+	wait_for_mic_approval: true,
+	stimulus: "Please take a moment to make sure that your voice is being recorded. When you are finished recording, press SPACEBAR.",
+	manually_end_recording: true,
+	manually_end_recording_key: [32]
+	};
+timeline.push(recording_intro);
+
+var reading_instructions2 = {
+	type: 'instructions',
+	pages: [
+		'Once again, you will be presented with a page that will tell you to read QUICKLY or SLOWLY.' +
+		'<p>On the next page you will be presented with a sentence, which you will read out loud at the specified rate. As a reminder, your voice will be recorded during these trials.</p>' +
+		'When you are done reading, please press SPACEBAR to present the following audio stimuli. Please try to press SPACEBAR immediately after you are finished recording.' +
+		'<p>	If you hear the sound "ba", please hit the "b" button on your keyboard</p>'+
+		'<p>	If you hear the sound "wa", please hit the "w" button on your keyboard</p>'+
+		'There will be 200 total trials, and you will have the opportunity to take as many breaks as you wish between trials. When you are ready to begin, press the "Next" button below.'
+		],
+		show_clickable_nav: true
+	};
+	timeline.push(reading_instructions2);
+
+
+var reading_block = {
+	timeline: [
+		{
+		type: 'html-keyboard-response',
+		stimulus: function(){return '<p>Trial '+tnum+' of 200</p><p><em>If you need to take a break you may do so at this time.</em></p><p>(Press SPACEBAR to begin)</p>';},
+		choices: [32],
+		on_finish: function(){ tnum += 1;}
+		},
+		{
+		type: 'html-keyboard-response',
+		stimulus: jsPsych.timelineVariable('speed'),
+		choices: [32]
+		},
+		{
+		type: 'html-audio-response',
+		allow_playback: false,
+		stimulus: jsPsych.timelineVariable('stim'),
+    response_ends_trial: true
+		},
+		{
+		type: "audio-keyboard-response",
+		stimulus: jsPsych.timelineVariable('sound'),
+		prompt: '<p>What sound did you hear?</p><p>(press "b" if you heard "ba")</br>(press "w" if you heard "wa")</p>',
+		choices: ['w', 'b']
+		},
+		{
+		type: "survey-likert",
+		questions: [ { prompt: "On a scale of 1-6, 1 being very unsure and 6 very sure, how confident are you in your categorization of the sound you just heard?",
+			labels: ["1","2","3","4","5","6"],
+			required: true } ]
+		}
+	],
+	timeline_variables: [
+		{ sound: "sound/s1.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s1.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s2.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s2.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s3.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s3.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s4.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s4.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s5.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s5.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s6.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s6.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s7.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s7.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s8.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s8.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s9.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s9.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'},
+		{ sound: "sound/s10.wav", speed: 'Please read the sentence on the following page QUICKLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The sound I am trying to say is.'},
+		{ sound: "sound/s10.wav", speed: 'Please read the sentence on the following page SLOWLY.'+'<p>When you are ready to begin, press SPACEBAR.</p>', stim: 'The'+'&nbsp &nbsp &nbsp'+'sound'+'&nbsp &nbsp &nbsp'+'I'+'&nbsp &nbsp &nbsp'+'am'+'&nbsp &nbsp &nbsp'+'trying'+'&nbsp &nbsp &nbsp'+'to'+'&nbsp &nbsp &nbsp'+'say'+'&nbsp &nbsp &nbsp'+'is.'}
+	],
+	randomize_order: true,
+	repetitions: 10
+};
+timeline.push(reading_block);
+
+//trial counter - press spacebar to advance,
+
+//Save the Data
+var backup_data = {
+	type: 'html-keyboard-response',
+	stimulus: '<p>Saving your results...</p>',
+	choices: jsPsych.NO_KEYS,
+	trial_duration: 1000,
+	on_finish: function() {
+          var csvData = jsPsych.data.get().csv(); //this is the csv data
+          console.log(csvData);
+          var formData = {
+            exp: "IMG_SPEECH",
+            subj: subject_id,
+            results: csvData
+          };
+          $.post(
+            "https://svanhedger.pythonanywhere.com/data",
+            formData
+          );
+    }
+};
+
+timeline.push(backup_data);
+
+/* Finish Connection with Pavlovia */
+var pavlovia_finish = {
+type: "pavlovia",
+command: "finish"
+};
+
+timeline.push(pavlovia_finish);
+
+
+var surveylink = "https://ssd.az1.qualtrics.com/jfe/form/SV_3w7LOqhR9zwN5Sm?SUBJID="+subject_id+"&participant=%SURVEY_CODE%"; //survey link that includes participant ID
+
+
+  var ending_instructions = {
+    type: 'html-keyboard-response',
+    stimulus: '<p>Thank you for completing this portion of the study.</p>' +
+              '<p>Click on the button below to be taken to the final part of the study, which involves completing a questionnaire.</p>'+
+              '<p><a href='+surveylink+'>Start Survey</a></p>',
+  };
+
+  timeline.push(ending_instructions);
+
+    jsPsych.init({
+        timeline: timeline,
+	      preload_audio: all_audio
+    });
+
+    </script>
+</html>

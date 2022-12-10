@@ -5,19 +5,19 @@ from psychopy import sound, gui, visual, core, data, event, logging, clock, colo
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 from psychtoolbox import GetSecs, WaitSecs
-import numpy as np
 import random
 
 
 # --- Constants ---
-FREQS = [180, 280]
+FREQS = [190, 280]
 TONE_DUR = 0.5
 ISI = 0.5
 TONES_PER_TRIAL = 4
+N_TRIALS = 3
 
 # --- Functions ---
 def get_window():
-    WIN = visual.Window(size = (300, 200),
+    WIN = visual.Window(size = (800, 500),
     screen = -1,
     units = "norm",
     fullscr = False,
@@ -37,34 +37,47 @@ def get_keyboard(dev_name):
         )
     return Keyboard(idx)
 
+def ready(WIN):
+    block_begin = visual.TextStim(WIN,
+                                  text = "Press 'enter' to begin!",
+                                  pos=(0.0, 0.0),
+                                  color=(1, 1, 1),
+                                  colorSpace='rgb')
+    block_begin.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+
 def fixation(WIN, secs):
     fixation = visual.TextStim(WIN, '+')
     fixation.draw()
     WIN.flip()
-    jitter = random.uniform(-0.1, 0)
+    jitter = random.uniform(-0.1, 0.1)
     WaitSecs(secs + jitter)
     WIN.flip()
     return(fixation)
 
-def play_tone(WIN, TONE_DUR, freq, sound = True):
+def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
     now = GetSecs()
     snd = Sound(freq, secs = TONE_DUR)
     prompt = visual.TextStim(WIN, '*')
     prompt.draw()
-    snd.play(when = now + 0.001) if sound else None
+    snd.play(when = now + 0.001)
     WaitSecs(0.001)
+#     MARKER.send(mark) if isinstance(mark, int) else None
     WIN.flip()
-
-# def play_tone(TONE_DUR, ISI, freq, mark):
-#     play_tone_with_cue(WIN, TONE_DUR, freq)
-# #     MARKER.send(mark)
-#     WaitSecs(ISI)
-
-# def imagine_tone(WIN, TONE_DUR, ISI, mark):
-#     freq = None
-#     play_tone_with_cue(WIN, TONE_DUR, freq)
-# #     MARKER.send(mark)
-#     WaitSecs(ISI)
+    WaitSecs(TONE_DUR)
+    WIN.flip()
+    
+def display_cue_only(WIN, MARKER, TONE_DUR, mark):
+    now = GetSecs()
+    prompt = visual.TextStim(WIN, '*')
+    prompt.draw()
+    WaitSecs(0.001)
+#     MARKER.send(mark)
+    WIN.flip()
+    WaitSecs(TONE_DUR)
+    WIN.flip()
     
 def get_mark(index, sound):
     if sound: # if tone was played, marker starts with '1'
@@ -73,8 +86,8 @@ def get_mark(index, sound):
         mark = int(str(2) + str(index + 1))
     return(mark)
 
-def get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL):
-    index = np.random.randint(0, len(FREQS))
+def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
+    index = random.randint(0, 1)
     freq = FREQS[index]
     
     freqs = []
@@ -82,8 +95,7 @@ def get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL):
     
     for i in range(TONES_PER_TRIAL):
         mark = get_mark(index, sound = True)
-        play_tone(TONE_DUR, ISI, freq, mark, sound = True)
-#         MARKER.send(mark)
+        play_tone(WIN, MARKER, TONE_DUR, freq, mark)
         WaitSecs(ISI)
         
         freqs.append(freq)
@@ -91,8 +103,7 @@ def get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL):
 
     for i in range(TONES_PER_TRIAL):
         mark = get_mark(index, sound = False)
-        imagine_tone(WIN, TONE_DUR, ISI, mark, sound = False)
-#         MARKER.send(mark)
+        display_cue_only(WIN, MARKER, TONE_DUR, mark)
         WaitSecs(ISI)
         
         freqs.append(freq)
@@ -101,19 +112,20 @@ def get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL):
     return(freq, freqs, marks)
 
 def white_noise(secs):
-    jitter = random.uniform(-0.1, 0);
-    return(none)
-    # jitter
-    # play white noise for jittered duration
+    start = random.uniform(0, 8)
+    stop = start + secs + random.uniform(-0.1, 0.1)
+    snd = Sound('gaussianwhitenoise.wav', startTime = start, stopTime = stop, volume = 0.5)
+    snd.play()
+    WaitSecs(stop - start)
     
 def play_displaced_target(WIN, TONE_DUR, freq):
     # Prepare sound
-    displacement = np.random.randint(-10, 10)
+    displacement = random.randint(-10, 10)
     displaced_freq = freq + displacement
-    play_tone(WIN, TONE_DUR, displaced_freq)
-    return(displayed_freq)
+    play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+    return(displaced_freq)
     
-def pitch_adjustment(WIN, TONE_DUR, displaced_freq):
+def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
 
     # Fetch response
     keylist = ['up', 'down', 'return']
@@ -125,33 +137,59 @@ def pitch_adjustment(WIN, TONE_DUR, displaced_freq):
         elif keys:
             if 'up' in keys:
                 displaced_freq += 1
-                play_tone(WIN, TONE_DUR, displaced_freq)
+                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
             elif 'down' in keys:
                 displaced_freq -= 1
-                play_tone(WIN, TONE_DUR, displaced_freq)
+                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
 
     response = displaced_freq
     return(response)
 
 def feedback(freq, response):
-    return(none)
-    # display feedback
+    
+    if freq == response:
+        feedback = visual.TextStim(WIN,
+                  text = "Spot on! Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
+    elif response < freq:
+        feedback = visual.TextStim(WIN,
+                  text = f"You were {freq - response} Hz below the target. Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
+    elif response > freq:
+        feedback = visual.TextStim(WIN,
+                  text = f"You were {response - freq} Hz above the target. Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
 
+    feedback.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
 
-WIN = get_window()
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
+# MARKER = EventMarker()
+MARKER = None
+WIN = get_window()
 
-for i in range(3):
-    WaitSecs(1)
-    fixation(WIN, 2)
-    WaitSecs(1)
-    freq, freqs, marks = get_trial(FREQS, TONE_DUR, ISI, WIN, TONES_PER_TRIAL)
-    WaitSecs(1)
+ready(WIN)
+
+for trial in range(N_TRIALS):
+    WaitSecs(0.5)
+    fixation(WIN, 1)
+    WaitSecs(0.5)
+    freq, freqs, marks = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
     white_noise(1)
-    WaitSecs(1)
+    WaitSecs(0.5)
     displaced_freq = play_displaced_target(WIN, TONE_DUR, freq)
-    response = pitch_adjustment(displaced_freq)
-    WaitSecs(1)
+    response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
+    WaitSecs(0.5)
     feedback(freq, response)
-    WaitSecs(1)
     

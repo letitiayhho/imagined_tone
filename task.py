@@ -264,7 +264,7 @@ reward = get_reward(LOG)
 trial_num = get_trial_num(LOG)
 
 ready(WIN)
-while trial_num < N_TRIALS:
+while trial_num <= N_TRIALS:
     WaitSecs(0.5)
     fixation(WIN, 1)
     WaitSecs(0.5)

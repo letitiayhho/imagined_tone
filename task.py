@@ -5,182 +5,273 @@ from psychopy import sound, gui, visual, core, data, event, logging, clock, colo
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 from psychtoolbox import GetSecs, WaitSecs
-#from events import EventMarker
-import numpy as np
-import os.path
-import csv
+import random
+import os
+import pandas as pd
 
-# --- Setup the Window ---
-win = visual.Window(
-    size=[200, 100], fullscr=False, screen=0, 
-    winType='pyglet', allowStencil=False,
-    monitor='testMonitor', color=[0,0,0], colorSpace='rgb',
-    blendMode='avg', useFBO=True, 
-    units='height')
-win.mouseVisible = True
+# --- Constants ---
+FREQS = [190, 280]
+TONE_DUR = 0.5
+ISI = 0.5
+TONES_PER_TRIAL = 4
+N_TRIALS = 3
 
-# --- Setup keyboard ---
-from psychopy.hardware import keyboard
-from psychopy import core
+# --- Functions ---
+def set_seed(SUB_NUM, BLOCK_NUM):
+    SEED = int(SUB_NUM + "0" + BLOCK_NUM)
+    print("Current seed: " + str(SEED))
+    random.seed(SEED)
 
-kb = keyboard.Keyboard()
+def get_window():
+    WIN = visual.Window(size = (800, 500),
+    screen = -1,
+    units = "norm",
+    fullscr = False,
+    pos = (0, 0),
+    allowGUI = False)
+    return(WIN)
 
-# during your trial
-kb.clock.reset()  # when you want to start the timer from
-keys = kb.getKeys(['space', 'escape'], waitRelease=True)
-if 'escape' in keys:
-    core.quit()
-for key in keys:
-    print(key.name, key.rt, key.duration)
+def get_keyboard(dev_name):
+    devs = hid.get_keyboard_indices()
+    idxs = devs[0]
+    names = devs[1]
+    try:
+        idx = [idxs[i] for i, nm in enumerate(names) if nm == dev_name][0]
+    except:
+        raise Exception(
+        'Cannot find %s! Available devices are %s.'%(dev_name, ', '.join(names))
+        )
+    return Keyboard(idx)
 
-TEST_MODE = False
-TRIALS = 10 # takes about 6:40 per block
-FREQS = [50, 100, 150, 200, 250]
+def open_log(SUB_NUM, BLOCK_NUM):
+    log = "data/logs/sub-" + SUB_NUM + "_blk-" + BLOCK_NUM + ".log"
 
-#sub_num = input("Input subject number: ")
-#block_num = input("Input block number: ")
-sub_num = "0"
-block_num = "0"
+    if not os.path.isfile(log): # create log file if it doesn't exist
+        print(f"Creating {log}")
+        d = {
+            'seed': [],
+            'sub_num': [],
+            'block_num': [],
+            'trial_num': [],
+            'tone_num': [],
+            'heard': [],
+            'mark': [],
+            'freq': [],
+            'displaced_freq': [],
+            'response': [],
+            'correct': [],
+            'reward': [],
+            }
+        print(d)
+        df = pd.DataFrame(data = d)
+        df.to_csv(log, mode='w', index = False)
+    return(log)
 
-# set subject number and block as seed
-seed = int(sub_num + "0" + block_num)
-print("Current seed: " + str(seed))
-np.random.seed(seed)
-
-# count trial progress in log file
-log = "..\data\logs\subj_" + sub_num + "_block_" + block_num + ".log"
-if not os.path.isfile(log): # create log file if it doesn't exist
-    with open(log, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['trial', 'freq', 'marker'])
-trial_count = sum(1 for line in open(log))
-print("Current trial number: " + str(trial_count))
-
-# --- Initialize components for Routine "WelcomeScreen" ---
-WelcomeScreenroutine = visual.TextStim(win=win, name='WelcomeScreenroutine',
-    text='Welcome. This is an auditory perception study.',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-welcome_key_resp = keyboard.Keyboard()
-welcome_key_resp.keys = ['space']
-
-# --- Initialize components for Routine "Instructions" ---
-text_instr = visual.TextStim(win=win, name='text_instr',
-    text='First, you will hear a tone. Pay attention carefully as you will be asked to imagine the tone after it has been played. ',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-instruction_key_resp = keyboard.Keyboard()
-instruction_key_resp.keys = ['space']
-
-# --- Initialize components for Routine "Instructions2" ---
-text_instr_2 = visual.TextStim(win=win, name='text_instr_2',
-    text='After hearing the tone, a brief pause will ensue. After this pause, a signifier will be presented on the screen and you will be expected to imagine the tone you just heard. ',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-instructions2_key_resp = keyboard.Keyboard()
-instructions2_key_resp.keys = ['space']
-
-# start the experiment
-WaitSecs(5.)
-
-for i in range(trial_count, TRIALS + 1):
-    print(i)
-
-    if TEST_MODE:
-        freq = 100
+def get_reward(LOG):
+    log = pd.read_csv(LOG)
+    rewards = log['reward']
+    if len(rewards) == 0:
+        reward = 0
     else:
-        index = np.random.randint(0, len(FREQS))
-        freq = FREQS[index]
-        mark = index + 1
-    snd = Sound(freq, secs = 0.2)
+        reward = rewards.iloc[-1]
+    reward = int(reward)
+    return(reward)
 
-    # schedule sound
-    now = GetSecs()
-    snd.play(when = now + 0.1)
-    WaitSecs(0.1)
-    #marker.send(mark)
-
-    # log trial info
-    with open(log, 'a') as f:
-        writer = csv.writer(f)
-        writer.writerow([i, freq, mark])
-
-    # add jitter between TRIALS
-    WaitSecs(0.2+np.random.uniform(0, 0.1))
-    
-#INSERT BLANK SCREEN#
-
-#INSERT SCREEN WITH SIGNIFIER FOR IMAGINED SEQUENCE#
-    
-# --- Initialize components for Routine "Instructions3" ---
-text_instr_3 = visual.TextStim(win=win, name='text_instr_3',
-    text='Now you will hear a random tone. After hearing this tone, please indicate if this tone is the tone you heard at the beginning of the experiment. ',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-instructions3_key_resp = keyboard.Keyboard()
-instructions3_key_resp.keys = ['space']
-
-# random tone after imagined sequence
-WaitSecs(5.)
-
-for i in range(trial_count, TRIALS + 1):
-    print(i)
-
-    if TEST_MODE:
-        freq = 100
+def get_trial_num(LOG):
+    log = pd.read_csv(LOG)
+    trial_nums = log['trial_num']
+    if len(trial_nums) == 0:
+        trial_num = 0
     else:
-        index = np.random.randint(0, len(FREQS))
-        freq = FREQS[index]
-        mark = index + 1
-    snd = Sound(freq, secs = 0.2)
+        trial_num = trial_nums.iloc[-1]
+    trial_num = int(trial_num)
+    return(trial_num)
 
-    # schedule sound
+def ready(WIN):
+    block_begin = visual.TextStim(WIN,
+                                  text = "Press 'enter' to begin!",
+                                  pos=(0.0, 0.0),
+                                  color=(1, 1, 1),
+                                  colorSpace='rgb')
+    block_begin.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+
+def fixation(WIN, secs):
+    fixation = visual.TextStim(WIN, '+')
+    fixation.draw()
+    WIN.flip()
+    jitter = random.uniform(-0.1, 0.1)
+    WaitSecs(secs + jitter)
+    WIN.flip()
+    return(fixation)
+
+def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
     now = GetSecs()
-    snd.play(when = now + 0.1)
-    WaitSecs(0.1)
-    #marker.send(mark)
+    snd = Sound(freq, secs = TONE_DUR)
+    prompt = visual.TextStim(WIN, '*')
+    prompt.draw()
+    snd.play(when = now + 0.001)
+    WaitSecs(0.001)
+#     MARKER.send(mark) if isinstance(mark, int) else None
+    WIN.flip()
+    WaitSecs(TONE_DUR)
+    WIN.flip()
+    
+def display_cue_only(WIN, MARKER, TONE_DUR, mark):
+    now = GetSecs()
+    prompt = visual.TextStim(WIN, '*')
+    prompt.draw()
+    WaitSecs(0.001)
+#     MARKER.send(mark)
+    WIN.flip()
+    WaitSecs(TONE_DUR)
+    WIN.flip()
+    
+def get_mark(index, sound):
+    if sound: # if tone was played, marker starts with '1'
+        mark = int(str(1) + str(index + 1))
+    else: # if tone was imagined, marker starts with '2'
+        mark = int(str(2) + str(index + 1))
+    return(mark)
 
-    # log trial info
-    with open(log, 'a') as f:
-        writer = csv.writer(f)
-        writer.writerow([i, freq, mark])
+def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
+    index = random.randint(0, 1)
+    freq = FREQS[index]
+    
+    mark_list = []
+    for i in range(TONES_PER_TRIAL):
+        mark = get_mark(index, sound = True)
+        play_tone(WIN, MARKER, TONE_DUR, freq, mark)
+        WaitSecs(ISI)        
+        mark_list.append(mark)
 
-    # add jitter between TRIALS
-    WaitSecs(0.2+np.random.uniform(0, 0.1))
+    for i in range(TONES_PER_TRIAL):
+        mark = get_mark(index, sound = False)
+        display_cue_only(WIN, MARKER, TONE_DUR, mark)
+        WaitSecs(ISI)
+        mark_list.append(mark)
+            
+    return(freq, mark_list)
 
-# --- Initialize components for Routine "Instructions4" ---
-text_instr_4 = visual.TextStim(win=win, name='text_instr_4',
-    text='Is this the tone you heard at the beginning of the experiment? ',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-instructions4_key_resp = keyboard.Keyboard()
-instructions4_key_resp.keys = ['space']
+def white_noise(secs):
+    start = random.uniform(0, 8)
+    stop = start + secs + random.uniform(-0.1, 0.1)
+    snd = Sound('gaussianwhitenoise.wav', startTime = start, stopTime = stop, volume = 0.5)
+    snd.play()
+    WaitSecs(stop - start)
+    
+def play_displaced_target(WIN, TONE_DUR, freq):
+    displacement = random.randint(-10, 10)
+    displaced_freq = freq + displacement
+    play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+    return(displaced_freq)
+    
+def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
+    keylist = ['up', 'down', 'return']
 
-# --- Initialize components for Routine "Instructions5" ---
-text_instr_5 = visual.TextStim(win=win, name='text_instr_5',
-    text='Thank you for participating in this study. ',
-    font='Arial',
-    pos=(-0.3, 0.25), height=0.04, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-instructions5_key_resp = keyboard.Keyboard()
-instructions5_key_resp.keys = ['space']
+    while True:
+        keys = event.getKeys(keyList = keylist)
+        if 'return' in keys: # empty response not accepted
+            break
+        elif keys:
+            if 'up' in keys:
+                displaced_freq += 1
+                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+            elif 'down' in keys:
+                displaced_freq -= 1
+                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
 
-#marker.close()
-print("Done.")
+    response = displaced_freq
+    return(response)
+
+def feedback(freq, response, reward):
+    
+    if freq == response:
+        correct = 1
+        reward += 0.1
+        feedback = visual.TextStim(WIN,
+                  text = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
+    elif response < freq:
+        correct = 0
+        feedback = visual.TextStim(WIN,
+                  text = f"You were {freq - response} Hz below the target. You earned ${reward} for this block. Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
+    elif response > freq:
+        correct = 0
+        feedback = visual.TextStim(WIN,
+                  text = f"You were {response - freq} Hz above the target. You earned ${reward} for this block. Press 'enter' to continue.",
+                  pos=(0.0, 0.0),
+                  color=(1, 1, 1),
+                  colorSpace='rgb'
+                 )
+
+    feedback.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+    
+    return(correct, reward)
+
+def broadcast(n_tones, var):
+    if not isinstance(var, list):
+        broadcasted_array = [var]*n_tones
+    return(broadcasted_array)
+
+def write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward):
+    print("Writing to log file")
+    d = {
+        'seed': broadcast(TONES_PER_TRIAL * 2, SEED),
+        'sub_num': broadcast(TONES_PER_TRIAL * 2, SUB_NUM),
+        'block_num': broadcast(TONES_PER_TRIAL * 2, BLOCK_NUM),
+        'trial_num': broadcast(TONES_PER_TRIAL * 2, trial_num),
+        'tone_num' : list(range(1, TONES_PER_TRIAL * 2 + 1 )),
+        'heard' : [True]*TONES_PER_TRIAL + [False] * TONES_PER_TRIAL,
+        'mark': mark,
+        'freq': broadcast(TONES_PER_TRIAL * 2, freq),
+        'displaced_freq': broadcast(TONES_PER_TRIAL * 2, displaced_freq),
+        'response': broadcast(TONES_PER_TRIAL * 2, response),
+        'correct': broadcast(TONES_PER_TRIAL * 2, correct),
+        'reward': broadcast(TONES_PER_TRIAL * 2, reward),
+        }
+    df = pd.DataFrame(data = d)
+    df.to_csv(LOG, mode='a', header = False, index = False)
+
+SUB_NUM = input("Input subject number: ")
+BLOCK_NUM = input("Input block number: ")
+
+SEED = set_seed(SUB_NUM, BLOCK_NUM)
+# KB = get_keyboard('Dell Dell USB Entry Keyboard')
+# MARKER = EventMarker()
+MARKER = None
+WIN = get_window()
+
+LOG = open_log(SUB_NUM, BLOCK_NUM)
+reward = get_reward(LOG)
+trial_num = get_trial_num(LOG)
+
+ready(WIN)
+for trial in range(N_TRIALS - trial_num):
+    WaitSecs(0.5)
+    fixation(WIN, 1)
+    WaitSecs(0.5)
+    freq, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
+    white_noise(1)
+    WaitSecs(0.5)
+    displaced_freq = play_displaced_target(WIN, TONE_DUR, freq)
+    response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
+    WaitSecs(0.5)
+    correct, reward = feedback(freq, response, reward)
+    trial_num += 1
+    print(displaced_freq)
+    write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward)
+    
+    

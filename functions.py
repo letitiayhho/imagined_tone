@@ -57,6 +57,14 @@ def open_log(SUB_NUM, BLOCK_NUM):
         df.to_csv(log, mode='w', index = False)
     return(log)
 
+def display_instructions(WIN, text):
+    instructions = visual.TextStim(WIN, text = text)
+    instructions.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+    print(text)
+
 def get_reward(LOG):
     log = pd.read_csv(LOG)
     rewards = log['reward']
@@ -172,24 +180,19 @@ def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
     response = displaced_freq
     return(response)
 
-def feedback(freq, response, reward):
-    
+def feedback(WIN, freq, response, reward):
     if freq == response:
         correct = 1
         reward += 0.1
-        feedback = visual.TextStim(WIN, text = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue.")
+        feedback = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue."
     elif response < freq:
         correct = 0
-        feedback = visual.TextStim(WIN, text = f"You were {freq - response} Hz below the target. You earned ${reward} for this block. Press 'enter' to continue.")
+        feedback = f"You were {freq - response} Hz below the target. Press 'enter' to continue."
     elif response > freq:
         correct = 0
-        feedback = visual.TextStim(WIN, text = f"You were {response - freq} Hz above the target. You earned ${reward} for this block. Press 'enter' to continue.")
+        feedback = f"You were {response - freq} Hz above the target. Press 'enter' to continue."
 
-    feedback.draw()
-    WIN.flip()
-    event.waitKeys(keyList = ['return'])
-    WIN.flip()
-    
+    display_instructions(WIN, feedback)    
     return(correct, reward)
 
 def broadcast(n_tones, var):

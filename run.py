@@ -34,9 +34,7 @@ while trial_num <= N_TRIALS:
     displaced_freq = play_displaced_target(WIN, TONE_DUR, freq)
     response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
     WaitSecs(0.5)
-    correct, reward = feedback(freq, response, reward)
+    correct, reward = feedback(WIN, freq, response, reward)
     print(displaced_freq)
     write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward)
     trial_num += 1
-    
-    

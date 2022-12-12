@@ -245,6 +245,11 @@ def write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, f
     df = pd.DataFrame(data = d)
     df.to_csv(LOG, mode='a', header = False, index = False)
 
+    
+    
+    
+# --- Task ---
+
 SUB_NUM = input("Input subject number: ")
 BLOCK_NUM = input("Input block number: ")
 

@@ -119,15 +119,12 @@ def white_noise(secs):
     WaitSecs(stop - start)
     
 def play_displaced_target(WIN, TONE_DUR, freq):
-    # Prepare sound
     displacement = random.randint(-10, 10)
     displaced_freq = freq + displacement
     play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
     return(displaced_freq)
     
 def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
-
-    # Fetch response
     keylist = ['up', 'down', 'return']
 
     while True:
@@ -145,25 +142,26 @@ def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
     response = displaced_freq
     return(response)
 
-def feedback(freq, response):
+def feedback(freq, response, reward):
     
     if freq == response:
+        reward += 0.1
         feedback = visual.TextStim(WIN,
-                  text = "Spot on! Press 'enter' to continue.",
+                  text = f"Spot on! You've now earned ${reward} for this block. Press 'enter' to continue.",
                   pos=(0.0, 0.0),
                   color=(1, 1, 1),
                   colorSpace='rgb'
                  )
     elif response < freq:
         feedback = visual.TextStim(WIN,
-                  text = f"You were {freq - response} Hz below the target. Press 'enter' to continue.",
+                  text = f"You were {freq - response} Hz below the target. You've now earned ${reward} for this block. Press 'enter' to continue.",
                   pos=(0.0, 0.0),
                   color=(1, 1, 1),
                   colorSpace='rgb'
                  )
     elif response > freq:
         feedback = visual.TextStim(WIN,
-                  text = f"You were {response - freq} Hz above the target. Press 'enter' to continue.",
+                  text = f"You were {response - freq} Hz above the target. You've now earned ${reward} for this block. Press 'enter' to continue.",
                   pos=(0.0, 0.0),
                   color=(1, 1, 1),
                   colorSpace='rgb'
@@ -173,11 +171,14 @@ def feedback(freq, response):
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
+    
+    return(reward)
 
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
 # MARKER = EventMarker()
 MARKER = None
 WIN = get_window()
+reward = 0
 
 ready(WIN)
 
@@ -191,5 +192,5 @@ for trial in range(N_TRIALS):
     displaced_freq = play_displaced_target(WIN, TONE_DUR, freq)
     response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
     WaitSecs(0.5)
-    feedback(freq, response)
+    reward = feedback(freq, response, reward)
     

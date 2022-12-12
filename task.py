@@ -81,9 +81,9 @@ def get_trial_num(LOG):
     log = pd.read_csv(LOG)
     trial_nums = log['trial_num']
     if len(trial_nums) == 0:
-        trial_num = 0
+        trial_num = 1
     else:
-        trial_num = trial_nums.iloc[-1]
+        trial_num = trial_nums.iloc[-1] + 1
     trial_num = int(trial_num)
     return(trial_num)
 
@@ -275,8 +275,8 @@ for trial in range(N_TRIALS - trial_num):
     response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
     WaitSecs(0.5)
     correct, reward = feedback(freq, response, reward)
-    trial_num += 1
     print(displaced_freq)
     write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward)
+    trial_num += 1
     
     

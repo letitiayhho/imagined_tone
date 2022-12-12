@@ -88,11 +88,7 @@ def get_trial_num(LOG):
     return(trial_num)
 
 def ready(WIN):
-    block_begin = visual.TextStim(WIN,
-                                  text = "Press 'enter' to begin!",
-                                  pos=(0.0, 0.0),
-                                  color=(1, 1, 1),
-                                  colorSpace='rgb')
+    block_begin = visual.TextStim(WIN, text = "Press 'enter' to begin!")
     block_begin.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -191,28 +187,13 @@ def feedback(freq, response, reward):
     if freq == response:
         correct = 1
         reward += 0.1
-        feedback = visual.TextStim(WIN,
-                  text = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue.",
-                  pos=(0.0, 0.0),
-                  color=(1, 1, 1),
-                  colorSpace='rgb'
-                 )
+        feedback = visual.TextStim(WIN, text = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue.")
     elif response < freq:
         correct = 0
-        feedback = visual.TextStim(WIN,
-                  text = f"You were {freq - response} Hz below the target. You earned ${reward} for this block. Press 'enter' to continue.",
-                  pos=(0.0, 0.0),
-                  color=(1, 1, 1),
-                  colorSpace='rgb'
-                 )
+        feedback = visual.TextStim(WIN, text = f"You were {freq - response} Hz below the target. You earned ${reward} for this block. Press 'enter' to continue.")
     elif response > freq:
         correct = 0
-        feedback = visual.TextStim(WIN,
-                  text = f"You were {response - freq} Hz above the target. You earned ${reward} for this block. Press 'enter' to continue.",
-                  pos=(0.0, 0.0),
-                  color=(1, 1, 1),
-                  colorSpace='rgb'
-                 )
+        feedback = visual.TextStim(WIN, text = f"You were {response - freq} Hz above the target. You earned ${reward} for this block. Press 'enter' to continue.")
 
     feedback.draw()
     WIN.flip()

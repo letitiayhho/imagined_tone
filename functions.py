@@ -13,11 +13,6 @@ def set_cwd(): # set working directory to git top level
     os.chdir(repo.working_tree_dir)
     print(repo.working_tree_dir)
 
-def set_seed(SUB_NUM, BLOCK_NUM):
-    SEED = int(SUB_NUM + "0" + BLOCK_NUM)
-    print("Current seed: " + str(SEED))
-    random.seed(SEED)
-
 def get_window():
     WIN = visual.Window(size = (800, 500),
     screen = -1,
@@ -97,6 +92,12 @@ def ready(WIN):
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
+
+def set_seed(SUB_NUM, BLOCK_NUM, trial_num):
+    seed = int(SUB_NUM + "0" + BLOCK_NUM + "0" + str(trial_num))
+    print("Current seed: " + str(seed))
+    random.seed(seed)
+    return(seed)
 
 def fixation(WIN, secs):
     fixation = visual.TextStim(WIN, '+')
@@ -206,10 +207,10 @@ def broadcast(n_tones, var):
         broadcasted_array = [var]*n_tones
     return(broadcasted_array)
 
-def write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward):
+def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward):
     print("Writing to log file")
     d = {
-        'seed': broadcast(TONES_PER_TRIAL * 2, SEED),
+        'seed': broadcast(TONES_PER_TRIAL * 2, seed),
         'sub_num': broadcast(TONES_PER_TRIAL * 2, SUB_NUM),
         'block_num': broadcast(TONES_PER_TRIAL * 2, BLOCK_NUM),
         'trial_num': broadcast(TONES_PER_TRIAL * 2, trial_num),

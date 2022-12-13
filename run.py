@@ -14,7 +14,6 @@ SUB_NUM = input("Input subject number: ")
 BLOCK_NUM = input("Input block number: ")
 
 set_cwd()
-SEED = set_seed(SUB_NUM, BLOCK_NUM)
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
 # MARKER = EventMarker()
 MARKER = None
@@ -26,6 +25,7 @@ trial_num = get_trial_num(LOG)
 
 ready(WIN)
 while trial_num <= N_TRIALS:
+    seed = set_seed(SUB_NUM, BLOCK_NUM, trial_num)
     WaitSecs(0.5)
     fixation(WIN, 1)
     WaitSecs(0.5)
@@ -37,5 +37,5 @@ while trial_num <= N_TRIALS:
     WaitSecs(0.5)
     correct, reward = feedback(WIN, freq, response, reward)
     print(displaced_freq)
-    write_log(LOG, TONES_PER_TRIAL, SEED, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward)
+    write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward)
     trial_num += 1

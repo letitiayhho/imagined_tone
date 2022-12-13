@@ -5,7 +5,13 @@ from psychopy import sound, gui, visual, core, data, event, logging, clock, colo
 from psychtoolbox import GetSecs, WaitSecs
 import random
 import os
+import git
 import pandas as pd
+
+def set_cwd(): # set working directory to git top level
+    repo = git.Repo('.', search_parent_directories=True)
+    os.chdir(repo.working_tree_dir)
+    print(repo.working_tree_dir)
 
 def set_seed(SUB_NUM, BLOCK_NUM):
     SEED = int(SUB_NUM + "0" + BLOCK_NUM)

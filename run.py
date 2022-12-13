@@ -13,6 +13,7 @@ N_TRIALS = 3
 SUB_NUM = input("Input subject number: ")
 BLOCK_NUM = input("Input block number: ")
 
+set_cwd()
 SEED = set_seed(SUB_NUM, BLOCK_NUM)
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
 # MARKER = EventMarker()

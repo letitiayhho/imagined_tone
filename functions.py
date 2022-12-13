@@ -73,7 +73,8 @@ def get_reward(LOG):
         reward = 0
     else:
         reward = rewards.iloc[-1]
-    reward = int(reward)
+    reward = float(reward)
+    print(f'reward: {reward}')
     return(reward)
 
 def get_trial_num(LOG):
@@ -119,7 +120,7 @@ def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
     WIN.flip()
     WaitSecs(TONE_DUR)
     WIN.flip()
-    
+
 def display_cue_only(WIN, MARKER, TONE_DUR, mark):
     now = GetSecs()
     prompt = visual.TextStim(WIN, '*')
@@ -129,7 +130,16 @@ def display_cue_only(WIN, MARKER, TONE_DUR, mark):
     WIN.flip()
     WaitSecs(TONE_DUR)
     WIN.flip()
-    
+
+def play_adjusted_tone(WIN, TONE_DUR, freq):
+    WIN.flip()
+    now = GetSecs()
+    snd = Sound(freq, secs = TONE_DUR)
+    prompt = visual.TextStim(WIN, '*')
+    prompt.draw()
+    snd.play(when = now + 0.001)
+    WIN.flip()
+
 def get_mark(index, sound):
     if sound: # if tone was played, marker starts with '1'
         mark = int(str(1) + str(index + 1))
@@ -171,7 +181,7 @@ def play_displaced_target(WIN, MARKER, TONE_DUR, freq):
     print(f'displaced_freq: {displaced_freq}')
     return(displaced_freq)
     
-def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
+def pitch_adjustment(WIN, TONE_DUR, displaced_freq):
     keylist = ['up', 'down', 'return']
 
     while True:
@@ -181,10 +191,10 @@ def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
         elif keys:
             if 'up' in keys:
                 displaced_freq += 1
-                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+                play_adjusted_tone(WIN, TONE_DUR, displaced_freq)
             elif 'down' in keys:
                 displaced_freq -= 1
-                play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+                play_adjusted_tone(WIN, TONE_DUR, displaced_freq)
 
     response = displaced_freq
     return(response)
@@ -201,7 +211,6 @@ def feedback(WIN, freq, response, reward):
         correct = 0
         feedback = f"You were {response - freq} Hz above the target. Press 'enter' to continue."
 
-    print(feedback)
     display_instructions(WIN, feedback)    
     return(correct, reward)
 

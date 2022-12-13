@@ -34,7 +34,7 @@ while trial_num <= N_TRIALS:
     white_noise(1)
     WaitSecs(0.5)
     displaced_freq = play_displaced_target(WIN, MARKER, TONE_DUR, freq)
-    response = pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq)
+    response = pitch_adjustment(WIN, TONE_DUR, displaced_freq)
     WaitSecs(0.5)
     correct, reward = feedback(WIN, freq, response, reward)
     print(displaced_freq)

@@ -10,8 +10,8 @@ N_TRIALS = 3
 
 # --- Task ---
 
-SUB_NUM = input("Input subject number: ")
-BLOCK_NUM = input("Input block number: ")
+SUB_NUM = input('Input subject number: ')
+BLOCK_NUM = input('Input block number: ')
 
 set_cwd()
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
@@ -25,6 +25,7 @@ trial_num = get_trial_num(LOG)
 
 ready(WIN)
 while trial_num <= N_TRIALS:
+    print(f'trial_num: {trial_num}')
     seed = set_seed(SUB_NUM, BLOCK_NUM, trial_num)
     WaitSecs(0.5)
     fixation(WIN, 1)

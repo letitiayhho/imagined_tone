@@ -140,6 +140,7 @@ def get_mark(index, sound):
 def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
     index = random.randint(0, 1)
     freq = FREQS[index]
+    print(f'freq: {freq}')
     
     mark_list = []
     for i in range(TONES_PER_TRIAL):
@@ -167,6 +168,7 @@ def play_displaced_target(WIN, MARKER, TONE_DUR, freq):
     displacement = random.randint(-10, 10)
     displaced_freq = freq + displacement
     play_tone(WIN, MARKER, TONE_DUR, displaced_freq)
+    print(f'displaced_freq: {displaced_freq}')
     return(displaced_freq)
     
 def pitch_adjustment(WIN, MARKER, TONE_DUR, displaced_freq):
@@ -199,6 +201,7 @@ def feedback(WIN, freq, response, reward):
         correct = 0
         feedback = f"You were {response - freq} Hz above the target. Press 'enter' to continue."
 
+    print(feedback)
     display_instructions(WIN, feedback)    
     return(correct, reward)
 

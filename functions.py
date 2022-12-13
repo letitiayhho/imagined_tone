@@ -50,7 +50,7 @@ def open_log(SUB_NUM, BLOCK_NUM):
             'freq': [],
             'displaced_freq': [],
             'response': [],
-            'correct': [],
+            'diff': [],
             'reward': [],
             }
         print(d)
@@ -200,14 +200,14 @@ def pitch_adjustment(WIN, TONE_DUR, displaced_freq):
     return(response)
 
 def feedback(WIN, freq, response, reward):
-    diff = freq - response
+    diff = response - freq
     if diff == 0:
         reward += 0.1
         feedback = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue."
     elif diff > 0:
-        feedback = f"You were {abs(diff)} Hz below the target. Press 'enter' to continue."
-    elif diff < 0:
         feedback = f"You were {abs(diff)} Hz above the target. Press 'enter' to continue."
+    elif diff < 0:
+        feedback = f"You were {abs(diff)} Hz below the target. Press 'enter' to continue."
 
     display_instructions(WIN, feedback)    
     return(diff, reward)

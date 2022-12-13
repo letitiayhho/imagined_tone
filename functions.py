@@ -200,26 +200,24 @@ def pitch_adjustment(WIN, TONE_DUR, displaced_freq):
     return(response)
 
 def feedback(WIN, freq, response, reward):
-    if freq == response:
-        correct = 1
+    diff = freq - response
+    if diff == 0:
         reward += 0.1
         feedback = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue."
-    elif response < freq:
-        correct = 0
-        feedback = f"You were {freq - response} Hz below the target. Press 'enter' to continue."
-    elif response > freq:
-        correct = 0
-        feedback = f"You were {response - freq} Hz above the target. Press 'enter' to continue."
+    elif diff > 0:
+        feedback = f"You were {abs(diff)} Hz below the target. Press 'enter' to continue."
+    elif diff < 0:
+        feedback = f"You were {abs(diff)} Hz above the target. Press 'enter' to continue."
 
     display_instructions(WIN, feedback)    
-    return(correct, reward)
+    return(diff, reward)
 
 def broadcast(n_tones, var):
     if not isinstance(var, list):
         broadcasted_array = [var]*n_tones
     return(broadcasted_array)
 
-def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, correct, reward):
+def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, diff, reward):
     print("Writing to log file")
     d = {
         'seed': broadcast(TONES_PER_TRIAL * 2, seed),
@@ -232,7 +230,7 @@ def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, f
         'freq': broadcast(TONES_PER_TRIAL * 2, freq),
         'displaced_freq': broadcast(TONES_PER_TRIAL * 2, displaced_freq),
         'response': broadcast(TONES_PER_TRIAL * 2, response),
-        'correct': broadcast(TONES_PER_TRIAL * 2, correct),
+        'diff': broadcast(TONES_PER_TRIAL * 2, diff),
         'reward': broadcast(TONES_PER_TRIAL * 2, reward),
         }
     df = pd.DataFrame(data = d)

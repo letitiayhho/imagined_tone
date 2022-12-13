@@ -156,7 +156,7 @@ def white_noise(secs):
     snd.play()
     WaitSecs(stop - start)
     
-def play_displaced_target(WIN, TONE_DUR, freq):
+def play_displaced_target(WIN, MARKER, TONE_DUR, freq):
     displacement = random.randint(-10, 10)
     displaced_freq = freq + displacement
     play_tone(WIN, MARKER, TONE_DUR, displaced_freq)

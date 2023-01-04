@@ -6,12 +6,11 @@ FREQS = [190, 280]
 TONE_DUR = 0.5
 ISI = 0.5
 TONES_PER_TRIAL = 4
-N_TRIALS = 3
 
 # --- Task ---
 
 SUB_NUM = input('Input subject number: ')
-BLOCK_NUM = input('Input block number [1-5]: ')
+BLOCK_NUM = input('Input block number [0-5]: ')
 
 set_cwd()
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
@@ -22,9 +21,11 @@ WIN = get_window()
 LOG = open_log(SUB_NUM, BLOCK_NUM)
 reward = get_reward(LOG)
 trial_num = get_trial_num(LOG)
+n_trials = get_n_trials(BLOCK_NUM)
 
+start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
 ready(WIN)
-while trial_num <= N_TRIALS:
+while trial_num <= n_trials:
     print(f'trial_num: {trial_num}')
     seed = set_seed(SUB_NUM, BLOCK_NUM, trial_num)
     WaitSecs(0.5)
@@ -40,3 +41,5 @@ while trial_num <= N_TRIALS:
     print(displaced_freq)
     write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, displaced_freq, response, diff, reward)
     trial_num += 1
+    
+end(WIN, BLOCK_NUM, reward)

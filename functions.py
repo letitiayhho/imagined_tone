@@ -59,14 +59,6 @@ def open_log(SUB_NUM, BLOCK_NUM):
         df.to_csv(log, mode='w', index = False)
     return(log)
 
-def display_instructions(WIN, text):
-    instructions = visual.TextStim(WIN, text = text)
-    instructions.draw()
-    WIN.flip()
-    event.waitKeys(keyList = ['return'])
-    WIN.flip()
-    print(text)
-
 def get_reward(LOG):
     log = pd.read_csv(LOG)
     rewards = log['reward']
@@ -87,6 +79,50 @@ def get_trial_num(LOG):
         trial_num = trial_nums.iloc[-1] + 1
     trial_num = int(trial_num)
     return(trial_num)
+
+def get_n_trials(BLOCK_NUM):
+    if BLOCK_NUM == "0":
+        n_trials = 3
+    else:
+        n_trials = 30
+    return(n_trials)
+
+def start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
+    if BLOCK_NUM == "0":
+        instructions(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
+    else:
+        block_welcome(WIN, BLOCK_NUM)
+        
+def display_instructions(WIN, text):
+    instructions = visual.TextStim(WIN, text = text)
+    instructions.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+    print(text)
+
+def instructions(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
+    display_instructions(WIN, "Welcome to the experiment. \n \n  Press 'enter' to begin.")
+    display_instructions(WIN, "We are interested in how your brain represents imagined tones. In each trial for this task you will hear a tone played 4 times at a constant rhythm accompanied by a '*' symbol. The same symbol will then appear at the same rhythm 4 times, but without any sound. \n \n  Press 'enter' for the remaining instructions.")
+    display_instructions(WIN, "Every time the '*' symbol appears without the target tone being played, try to imagine the sound of the target tone as accurately as you can! Try your best do this without humming, or breathing out of your nose or mouth (i.e. subvocalizing). \n \n Press 'enter' for an example.")
+    
+    freq, mark_list = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
+    
+    display_instructions(WIN, "At the end of each tone, you will hear a short burst of white noise as a distractor, followed by a pitch-adjusted version of the target tone. You will then be asked to use the 'up' and 'down' arrow keys to adjust the pitch of the displaced tone until it matches the target tone. \n \n  Press 'enter' for an example.")
+    
+    freq, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
+    white_noise(1)
+    WaitSecs(0.5)
+    displaced_freq = play_displaced_target(WIN, MARKER, TONE_DUR, freq)
+    response = pitch_adjustment(WIN, TONE_DUR, displaced_freq)
+
+    display_instructions(WIN, "You will receive an extra $0.10 every time you correctly identify the pitch of the original target tone up to $10. \n \n  Press 'enter' for the remaining instructions.")
+    display_instructions(WIN, "Lastly, as this is an EEG experiment it is important for you not to move your body, move your your eyes, or blink while the tones are playing. To help with this, keep your gaze on the '*'s and stay relaxed while they are on the screen. \n \n  Press 'enter' for the remaining instructions.")
+    display_instructions(WIN, "You will now complete three practice trials. Please let you experimenter know if you have any questions or are experiencing any difficulties with the display or audio. \n \n Press 'enter' to continue to the practice trials.")
+
+def block_welcome(WIN, BLOCK_NUM):
+    display_instructions(WIN, f"Welcome to block number {BLOCK_NUM}/5. \n \n Press 'enter' to continue.")
+    display_instructions(WIN, "Remember that when the tones are playing, keep your gaze on the '*' cues, try not to blink, and stay relaxed. Remember not to subvocalize or breathe out of your nose or mouth when you imagine the tones. \n \n Press 'enter' to begin the block!")
 
 def ready(WIN):
     block_begin = visual.TextStim(WIN, text = "Press 'enter' to begin!")
@@ -142,6 +178,8 @@ def play_adjusted_tone(WIN, TONE_DUR, freq):
     prompt = visual.TextStim(WIN, '*')
     prompt.draw()
     snd.play(when = now + 0.001)
+    WIN.flip()
+    WaitSecs(TONE_DUR)
     WIN.flip()
 
 def get_mark(index, sound):
@@ -242,3 +280,9 @@ def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, f
         }
     df = pd.DataFrame(data = d)
     df.to_csv(LOG, mode='a', header = False, index = False)
+
+def end(WIN, BLOCK_NUM, reward):
+    if BLOCK_NUM == "0":
+        display_instructions(WIN, "Congratulations for finishing the practice block. Let your experimenter know if you have any questions or if you would like to repeat this practice block. If you are ready, you will now move on to the 5 experiment blocks, each of which will have 30 trials.")
+    else:
+        display_instructions(WIN, f"End of block! You earned a total of ${reward} for this block. Your experimenter will now come and check on you.")

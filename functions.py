@@ -4,6 +4,7 @@ from psychopy.sound.backend_ptb import SoundPTB as Sound
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors
 from psychtoolbox import GetSecs, WaitSecs
 import random
+#import time
 import os
 import git
 import pandas as pd
@@ -116,10 +117,13 @@ def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
     prompt.draw()
     snd.play(when = now + 0.001)
     WaitSecs(0.001)
+#    start = time.time()
 #     MARKER.send(mark) if isinstance(mark, int) else None
     WIN.flip()
     WaitSecs(TONE_DUR)
     WIN.flip()
+#    end = time.time()
+#    print(f"tone len: {end-start}")
 
 def display_cue_only(WIN, MARKER, TONE_DUR, mark):
     now = GetSecs()
@@ -155,8 +159,11 @@ def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
     mark_list = []
     for i in range(TONES_PER_TRIAL):
         mark = get_mark(index, sound = True)
+#        start = time.time()
         play_tone(WIN, MARKER, TONE_DUR, freq, mark)
-        WaitSecs(ISI)        
+        WaitSecs(ISI)
+#        end = time.time()
+#        print(f"Tone + ISI: {end-start}")
         mark_list.append(mark)
 
     for i in range(TONES_PER_TRIAL):

@@ -11,7 +11,7 @@ N_TRIALS = 3
 # --- Task ---
 
 SUB_NUM = input('Input subject number: ')
-BLOCK_NUM = input('Input block number [0-5]: ')
+BLOCK_NUM = input('Input block number [1-5]: ')
 
 set_cwd()
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')

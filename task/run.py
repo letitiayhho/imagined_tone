@@ -3,8 +3,8 @@ from functions import *
 
 # --- Constants ---
 FREQS = [190, 280]
-TONE_DUR = 0.5
-ISI = 0.5
+TONE_DUR = 0.4
+ISI = 0.8
 TONES_PER_TRIAL = 4
 
 # --- Task ---

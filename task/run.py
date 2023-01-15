@@ -1,5 +1,6 @@
 from psychtoolbox import WaitSecs
 from functions import *
+from events import EventMarker
 
 # --- Constants ---
 FREQS = [190, 280]
@@ -14,8 +15,8 @@ BLOCK_NUM = input('Input block number [0-5]: ')
 
 set_cwd()
 # KB = get_keyboard('Dell Dell USB Entry Keyboard')
-# MARKER = EventMarker()
-MARKER = None
+MARKER = EventMarker()
+# MARKER = None
 WIN = get_window()
 
 LOG = open_log(SUB_NUM, BLOCK_NUM)

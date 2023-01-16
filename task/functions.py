@@ -15,7 +15,7 @@ def set_cwd(): # set working directory to git top level
     print(repo.working_tree_dir)
 
 def get_window():
-    WIN = visual.Window(size = (800, 500),
+    WIN = visual.Window(size = (1920, 1080),
     screen = -1,
     units = "norm",
     fullscr = False,
@@ -146,7 +146,7 @@ def fixation(WIN, secs):
     WIN.flip()
     return(fixation)
 
-def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
+def play_tone(WIN, MARKER, TONE_DUR, freq, mark = None):
     now = GetSecs()
     snd = Sound(freq, secs = TONE_DUR)
     prompt = visual.TextStim(WIN, '*')
@@ -154,7 +154,8 @@ def play_tone(WIN, MARKER, TONE_DUR, freq, mark = False):
     snd.play(when = now + 0.001)
     WaitSecs(0.001)
 #    start = time.time()
-#     MARKER.send(mark) if isinstance(mark, int) else None
+    print(mark)
+    MARKER.send(mark) if isinstance(mark, int) else None
     WIN.flip()
     WaitSecs(TONE_DUR)
     WIN.flip()
@@ -166,7 +167,7 @@ def display_cue_only(WIN, MARKER, TONE_DUR, mark):
     prompt = visual.TextStim(WIN, '*')
     prompt.draw()
     WaitSecs(0.001)
-#     MARKER.send(mark)
+    MARKER.send(mark)
     WIN.flip()
     WaitSecs(TONE_DUR)
     WIN.flip()
@@ -215,7 +216,7 @@ def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
 def white_noise(secs):
     start = random.uniform(0, 8)
     stop = start + secs + random.uniform(-0.1, 0.1)
-    snd = Sound('gaussianwhitenoise.wav', startTime = start, stopTime = stop, volume = 0.5)
+    snd = Sound('task/gaussianwhitenoise.wav', startTime = start, stopTime = stop, volume = 0.5)
     snd.play()
     WaitSecs(stop - start)
     

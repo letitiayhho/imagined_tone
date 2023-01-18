@@ -255,7 +255,7 @@ def feedback(WIN, freq, response, reward):
         feedback = f"Spot on! You earned ${reward} for this block. Press 'enter' to continue."
     elif abs(diff) < 3:
         reward += 0.25
-        feedback = f"Close enough! You were {abs(diff)} above the target. You have earned ${reward} for this block. Press 'enter' to continue."
+        feedback = f"Close enough! You were {abs(diff)} Hz above the target. You have earned ${reward} for this block. Press 'enter' to continue."
     elif diff >= 3:
         feedback = f"You were {abs(diff)} Hz above the target. Press 'enter' to continue."
     elif diff <= 3:

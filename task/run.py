@@ -43,3 +43,7 @@ while trial_num <= n_trials:
     trial_num += 1
     
 end(WIN, BLOCK_NUM, reward)
+
+print("Block over :-)")
+BOX.close()
+core.quit()

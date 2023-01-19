@@ -4,8 +4,8 @@ from events import EventMarker
 
 # --- Constants ---
 FREQS = [190, 280]
-TONE_DUR = 0.4
-ISIs = [0.8, 1, 1.2]
+TONE_DUR = 0.5
+ISIs = [1, 1.1, 1.2]
 TONES_PER_TRIAL = 5
 
 # --- Task ---
@@ -42,8 +42,8 @@ while trial_num <= n_trials:
     write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, freq, ISI, displaced_freq, response, diff, reward)
     trial_num += 1
     
+ 
 end(WIN, BLOCK_NUM, reward)
 
 print("Block over :-)")
-BOX.close()
 core.quit()

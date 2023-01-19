@@ -50,7 +50,6 @@ def open_log(SUB_NUM, BLOCK_NUM):
             'heard': [],
             'mark': [],
             'freq': [],
-            'isi': [],
             'displaced_freq': [],
             'response': [],
             'diff': [],
@@ -89,9 +88,9 @@ def get_n_trials(BLOCK_NUM):
         n_trials = 30
     return(n_trials)
 
-def start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL):
+def start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
     if BLOCK_NUM == "0":
-        instructions(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
+        instructions(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
     else:
         block_welcome(WIN, BLOCK_NUM)
 
@@ -103,16 +102,16 @@ def display_instructions(WIN, text):
     WIN.flip()
     print(text)
 
-def instructions(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL):
+def instructions(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
     display_instructions(WIN, "Welcome to the experiment. \n \n  Press 'enter' to begin.")
     display_instructions(WIN, "We are interested in how your brain represents imagined tones. In each trial the '*' symbol will appear five times at a constant rhythm. A tone will be played at the same time as the first four '*'. At the fifth '*' the target tone will NOT play. \n \n Press 'enter' for the remaining instructions.")
     display_instructions(WIN, "When the '*' symbol appears without the target tone, try to imagine the sound of the target tone as accurately as you can. Try to imagine the tone as if you were actually listening to the tone! Try your best to do this without humming. It will help not to breathe out of your nose or mouth when imagining the tone. \n \n Press 'enter' for an example.")
     
-    freq, ISI, mark_list = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
+    freq, mark_list = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
     
     display_instructions(WIN, "At the end of each tone sequence, you will hear a short burst of white noise as a distractor, followed by a pitch-adjusted version of the target tone. Please use the 'up' and 'down' arrow keys to adjust the pitch of the displaced tone until it matches the target tone then press 'enter' to submit your answer. \n \n  Press 'enter' for an example.")
     
-    freq, ISI, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
+    freq, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
     white_noise(1)
     WaitSecs(0.5)
     displaced_freq = play_displaced_target(WIN, MARKER, TONE_DUR, freq)
@@ -192,9 +191,8 @@ def get_mark(index, sound):
         mark = int(str(2) + str(index + 1))
     return(mark)
 
-def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL):
-    # Pick ISI and target freq
-    ISI = random.choice(ISIs)
+def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL):
+    # Pick target freq
     index = random.randint(0, 1)
     freq = FREQS[index]
     print(f'freq: {freq}')
@@ -214,7 +212,7 @@ def get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL):
     WaitSecs(ISI)
     mark_list.append(mark)
 
-    return(freq, ISI, mark_list)
+    return(freq, mark_list)
 
 def white_noise(secs):
     start = random.uniform(0, 8)
@@ -280,7 +278,6 @@ def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, f
         'heard' : [True]*(TONES_PER_TRIAL-1) + [False],
         'mark': mark,
         'freq': broadcast(TONES_PER_TRIAL, freq),
-        'isi': broadcast(TONES_PER_TRIAL, ISI),
         'displaced_freq': broadcast(TONES_PER_TRIAL, displaced_freq),
         'response': broadcast(TONES_PER_TRIAL, response),
         'diff': broadcast(TONES_PER_TRIAL, diff),

@@ -5,7 +5,7 @@ from events import EventMarker
 # --- Constants ---
 FREQS = [190, 280]
 TONE_DUR = 0.5
-ISIs = [1, 1.1, 1.2]
+ISI = 1.2
 TONES_PER_TRIAL = 5
 
 # --- Task ---
@@ -23,7 +23,7 @@ reward = get_reward(LOG)
 trial_num = get_trial_num(LOG)
 n_trials = get_n_trials(BLOCK_NUM)
 
-start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
+start(WIN, BLOCK_NUM, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
 ready(WIN)
 while trial_num <= n_trials:
     print(f'trial_num: {trial_num}')
@@ -31,7 +31,7 @@ while trial_num <= n_trials:
     WaitSecs(0.5)
     fixation(WIN, 1)
     WaitSecs(0.5)
-    freq, ISI, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
+    freq, ISI, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISI, TONES_PER_TRIAL)
     white_noise(1)
     WaitSecs(0.5)
     displaced_freq = play_displaced_target(WIN, MARKER, TONE_DUR, freq)

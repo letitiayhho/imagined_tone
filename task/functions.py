@@ -106,11 +106,11 @@ def display_instructions(WIN, text):
 def instructions(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL):
     display_instructions(WIN, "Welcome to the experiment. \n \n  Press 'enter' to begin.")
     display_instructions(WIN, "We are interested in how your brain represents imagined tones. In each trial the '*' symbol will appear five times at a constant rhythm. A tone will be played at the same time as the first four '*'. At the fifth '*' the target tone will NOT play. \n \n Press 'enter' for the remaining instructions.")
-    display_instructions(WIN, "When the '*' symbol appears without the target tone, try to imagine the sound of the target tone as accurately as you can. Try to imagine the tone as if you were actually listening to the tone! Try your best do this without humming. It will help not to breathe out of your nose or mouth when imagining the tone. \n \n Press 'enter' for an example.")
+    display_instructions(WIN, "When the '*' symbol appears without the target tone, try to imagine the sound of the target tone as accurately as you can. Try to imagine the tone as if you were actually listening to the tone! Try your best to do this without humming. It will help not to breathe out of your nose or mouth when imagining the tone. \n \n Press 'enter' for an example.")
     
     freq, ISI, mark_list = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
     
-    display_instructions(WIN, "At the end of each tone sequence, you will hear a short burst of white noise as a distractor, followed by a pitch-adjusted version of the target tone. Please use the 'up' and 'down' arrow keys to adjust the pitch of the displaced tone until it matches the target tone. \n \n  Press 'enter' for an example.")
+    display_instructions(WIN, "At the end of each tone sequence, you will hear a short burst of white noise as a distractor, followed by a pitch-adjusted version of the target tone. Please use the 'up' and 'down' arrow keys to adjust the pitch of the displaced tone until it matches the target tone then press 'enter' to submit your answer. \n \n  Press 'enter' for an example.")
     
     freq, ISI, mark = get_trial(WIN, MARKER, FREQS, TONE_DUR, ISIs, TONES_PER_TRIAL)
     white_noise(1)

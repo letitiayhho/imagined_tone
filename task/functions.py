@@ -284,6 +284,6 @@ def write_log(LOG, TONES_PER_TRIAL, seed, SUB_NUM, BLOCK_NUM, trial_num, mark, f
 
 def end(WIN, BLOCK_NUM, reward):
     if BLOCK_NUM == "0":
-        display_instructions(WIN, "Congratulations for finishing the practice block. Let your experimenter know if you have any questions or if you would like to repeat this practice block. If you are ready, you will now move on to the 5 experiment blocks, each of which will have 30 trials.")
+        display_instructions(WIN, "Congratulations for finishing the practice block. Let your experimenter know if you have any questions or if you would like to repeat this practice block. If you are ready, you will now move on to the 5 experiment blocks, each of which will have 30 trials. \n \n Press 'enter' to complete this block.")
     else:
-        display_instructions(WIN, f"End of block! You earned a total of ${reward} for this block. Your experimenter will now come and check on you.")
+        display_instructions(WIN, f"End of block! You earned a total of ${reward} for this block. Your experimenter will now come and check on you. \n \n Press 'enter' to complete this block.")

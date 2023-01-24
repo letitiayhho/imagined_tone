@@ -3,8 +3,8 @@ from functions import *
 from events import EventMarker
 
 FREQS = [190, 280]
-TONE_DUR = 0.4
-ISI = 0.4
+TONE_DUR = 0.3
+ISI = 0.3
 N_TONES = 1000
 
 MARKER = EventMarker()

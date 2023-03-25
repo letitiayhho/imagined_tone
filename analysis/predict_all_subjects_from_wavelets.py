@@ -34,7 +34,7 @@ def main(subs, skips) -> None:
             subject = sub,
             task = task,
             run = run,
-            desc = 'decode_from_wavelets',
+            desc = 'predict_from_wavelets',
             suffix = 'scores',
             extension = 'npy',
         )
@@ -42,10 +42,10 @@ def main(subs, skips) -> None:
             print(f"Subject {sub} run {run} is already preprocessed")
             continue
 
-        subprocess.check_call("sbatch ./decode_from_wavelets.py %s %s %s %s %s" % (fpath, sub, task, run, scores_fpath), shell=True)
+        subprocess.check_call("sbatch ./predict_from_wavelets.py %s %s %s %s %s" % (fpath, sub, task, run, scores_fpath), shell=True)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Run decode_from_wavelets.py over given subjects')
+    parser = argparse.ArgumentParser(description='Run predict_from_wavelets.py over given subjects')
     parser.add_argument('--subs', 
                         type = str, 
                         nargs = '*', 

@@ -4,7 +4,7 @@
 #SBATCH --partition=broadwl
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --mem-per-cpu=32G
+#SBATCH --mem-per-cpu=16G
 #SBATCH --mail-type=all
 #SBATCH --mail-user=letitiayhho@uchicago.edu
 #SBATCH --output=logs/decode_from_wavelets_%j.log
@@ -38,17 +38,13 @@ def main(fpath, sub, task, run, scores_fpath):
     print(fpath)
     epochs = mne.read_epochs(fpath)
     
-    print("---------- Separate into heard and imagined epochs objects ----------")
+    print("---------- Separate heard epochs object ----------")
     epochs_heard = epochs['11', '12']
     events_heard = epochs_heard.events
-    epochs_imagined = epochs['21', '22']
-    events_imagined = epochs_imagined.events
     
     print("---------- Create event label dicts ----------")
     print(epochs_heard.event_id)
     label_dict_heard = {10001 : 0, 10002 : 1}
-    print(epochs_imagined.event_id)
-    label_dict_imagined = {10003 : 0, 10004 : 1}
 
     # Compute power
     print("---------- Compute power ----------")
@@ -77,32 +73,6 @@ def main(fpath, sub, task, run, scores_fpath):
     X_heard = power_heard.reshape((n_epochs, n_freqs * n_channels, n_windows)) # Set order to preserve epoch order
     print(np.shape(X_heard))
 
-    # Repeat for epochs_imagined
-    power_imagined = tfr_morlet(epochs_imagined,
-                       freqs = STIM_FREQS,
-                       n_cycles = n_cycles,
-                       use_fft = True,
-                       return_itc = False,
-                       decim = 3,
-                       n_jobs = 1,
-                       average = False)
-    power_imagined = np.log10(power_imagined)
-
-    # Get some information
-    n_epochs = np.shape(power_imagined)[0]
-    n_channels = np.shape(power_imagined)[1]
-    n_freqs = np.shape(power_imagined)[2]
-    n_windows = np.shape(power_imagined)[3]
-    print("n_windows: " + str(n_windows))
-
-    # Reshape for classifier
-    X_imagined = power_imagined.reshape((n_epochs, n_freqs * n_channels, n_windows)) # Set order to preserve epoch order
-    print(np.shape(X_imagined))
-    
-    del epochs_heard
-    del epochs_imagined
-    gc.collect()
-
     # Create array of condition labels
     print("---------- Create target array ----------")
     labels_heard = pd.Series(events_heard[:, 2])
@@ -110,12 +80,6 @@ def main(fpath, sub, task, run, scores_fpath):
     le = preprocessing.LabelEncoder()
     y_heard = le.fit_transform(y_heard)
     print(f'y_heard: {y_heard}')
-
-    labels_imagined = pd.Series(events_imagined[:, 2])
-    y_imagined = labels_imagined.replace(label_dict_imagined)
-    le = preprocessing.LabelEncoder()
-    y_imagined = le.fit_transform(y_imagined)
-    print(f'y_heard: {y_imagined}')
 
     # Decode
     print("---------- Decode ----------")
@@ -131,10 +95,14 @@ def main(fpath, sub, task, run, scores_fpath):
     time_decod = SlidingEstimator(clf)
 
     print("Fit estimators")
-    estimator = time_decod.fit(X_heard, y_heard)
-    
-    print("---------- Apply decoder ----------")
-    scores = estimator.score(X_imagined, y_imagined)
+    scores = cross_val_multiscore(
+        time_decod,
+        X_heard, # a trials x features x time array
+        y_heard, # an (n_trials,) array of integer condition labels
+        cv = 5, # use stratified 5-fold cross-validation
+        n_jobs = -1, # use all available CPU cores
+    )
+    scores = np.mean(scores, axis = 0) # average across cv splits
 
     # Save decoder score_shape
     print("---------- Save decoder scores ----------")
@@ -156,7 +124,7 @@ def main(fpath, sub, task, run, scores_fpath):
     ax.set_title('Sensor space decoding')
 
     # Save plot
-    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-pitch_' + 'run-' + run + '_decode_from_wavelets' + '.png'
+    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-imagine_' + 'run-' + run + '_decode_from_wavelets' + '.png'
     print('Saving figure to: ' + fig_fpath)
     plt.savefig(fig_fpath)
 

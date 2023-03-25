@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+import shutil
+import os
+import re
+
+p = Path('../data/bids/derivatives/preprocessing/')
+files = p.glob('**/*.fif.gz')
+
+for file in files:
+    file = str(file)
+
+    # if file contains '5khz'
+    if '5khz' in file:
+        # remove '5khz'
+        split_strings = file.split('_')
+        split_strings.remove('5khz')
+
+        # insert 'res-hi'
+        split_strings.insert(3, 'res-hi')
+        new_file = '_'.join(split_strings)
+
+    # if file does not contain '5khz' insert 'res-lo'
+    else:
+        split_strings = file.split('_')
+        split_strings.insert(3, 'res-lo')
+        new_file = '_'.join(split_strings)
+
+    # move file
+    print(f'moved {file} to {new_file}')
+    shutil.move(
+        file,
+        new_file,
+        )

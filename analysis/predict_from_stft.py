@@ -29,27 +29,36 @@ def main(fpath, sub, task, run, scores_fpath):
 
     print("---------- Load data ----------")
     print(fpath)
-    epochs = mne.read_epochs(epochs_fpath)
-
-    print("---------- Separate heard epochs object ----------")
+    epochs = mne.read_epochs(fpath)
+    
+    print("---------- Separate into heard and imagined epochs objects ----------")
     epochs_heard = epochs['11', '12']
     events_heard = epochs_heard.events
-    
+    epochs_imagined = epochs['21', '22']
+    events_imagined = epochs_imagined.events
+
     print("---------- Create event label dicts ----------")
     print(epochs_heard.event_id)
     label_dict_heard = {10001 : 0, 10002 : 1}
-    
+    print(epochs_imagined.event_id)
+    label_dict_imagined = {10003 : 0, 10004 : 1}
+
     print("---------- Create target array ----------")
-    label_dict_heard = {10001 : 0, 10002 : 1}
-    labels = pd.Series(events[:, 2])
-    y = labels.replace(label_dict_heard)
+    labels_heard = pd.Series(events_heard[:, 2])
+    y_heard = labels_heard.replace(label_dict_heard)
     le = preprocessing.LabelEncoder()
-    y = le.fit_transform(y)
+    y_heard = le.fit_transform(y_heard)
+    print(f'y_heard: {y_heard}')
+
+    labels_imagined = pd.Series(events_imagined[:, 2])
+    y_imagined = labels_imagined.replace(label_dict_imagined)
+    le = preprocessing.LabelEncoder()
+    y_imagined = le.fit_transform(y_imagined)
+    print(f'y_heard: {y_imagined}')
     
-    print("---------- Load power computed from stft ----------")
-    DERIV_ROOT = '../data/bids/derivatives'
+    print("---------- Load stft results ----------")
     sink = DataSink(DERIV_ROOT, 'decoding')
-    stft_fpath = sink.get_path(
+    stft_heard = sink.get_path(
         subject = sub,
         task = task,
         run = run,
@@ -57,20 +66,39 @@ def main(fpath, sub, task, run, scores_fpath):
         suffix = 'heard',
         extension = 'npy',
     )
-    print(f'Loading stft from {stft_fpath}')
-    Zxxs = np.load(stft_fpath)
+    print(f'Loading stft from {stft_heard}')
+    Zxxs_heard = np.load(stft_heard)
 
     # Reshape for decoder
-    n_epochs = np.shape(Zxxs)[0]
-    if n_epochs != np.shape(events)[0]:
+    n_epochs_heard = np.shape(Zxxs_heard)[0]
+    if n_epochs_heard != np.shape(events_heard)[0]:
         sys.exit('Incorrect number of epochs')
     n_freqs = 5
     n_chans = 62
-    n_windows = 19 # is this true?
-    Zxxs = Zxxs.reshape((n_epochs, n_freqs*n_chans, n_windows)) # n_epochs, n_freqs*n_chans, n_windows
+    n_windows = 19
+    Zxxs = Zxxs.reshape((n_epochs_heard, n_freqs*n_chans, n_windows)) # n_epochs, n_freqs*n_chans, n_windows
 
-    # Decode
-    print("---------- Decode ----------")
+    stft_imagined = sink.get_path(
+        subject = sub,
+        task = task,
+        run = run,
+        desc = 'stft',
+        suffix = 'imagined',
+        extension = 'npy',
+    )
+    print(f'Loading stft from {stft_imagined}')
+    Zxxs_imagined = np.load(stft_imagined)
+
+    # Reshape for decoder
+    n_epochs_imagined = np.shape(Zxxs_imagined)[0]
+    if n_epochs_imagined != np.shape(events_imagined)[0]:
+        sys.exit('Incorrect number of epochs')
+    n_freqs = 5
+    n_chans = 62
+    n_windows = 19
+    Zxxs = Zxxs.reshape((n_epochs_imagined, n_freqs*n_chans, n_windows)) # n_epochs, n_freqs*n_chans, n_windows
+
+    print("---------- Fit decoder ----------")
     n_stimuli = 2
     metric = 'accuracy'
 
@@ -83,26 +111,17 @@ def main(fpath, sub, task, run, scores_fpath):
     time_decod = SlidingEstimator(clf)
 
     print("Fit estimators")
-    scores = cross_val_multiscore(
-        time_decod,
-        Zxxs, # a trials x features x time array
-        y, # an (n_trials,) array of integer condition labels
-        cv = 5, # use stratified 5-fold cross-validation
-        n_jobs = -1, # use all available CPU cores
-    )
+    estimator = time_decod.fit(X_heard, y_heard)
+
+    print("---------- Apply decoder ----------")
+    scores = estimator.score(X_imagined, y_imagined)
     scores = np.mean(scores, axis = 0) # average across cv splits
 
-    # Save decoder score_shape
     print("---------- Save decoder scores ----------")
-    sink = DataSink(DERIV_ROOT, 'decoding')
-    scores_fpath = sink.get_path(
-        subject = sub,
-        task = task,
-        run = run,
-        desc = 'stft',
-        suffix = 'heard',
-        extension = 'npy',
-    )
+    print('Saving scores to: ' + scores_fpath)
+    np.save(scores_fpath, scores)
+
+    print("---------- Save decoder scores ----------")
     print('Saving scores to: ' + scores_fpath)
     np.save(scores_fpath, scores)
 
@@ -117,7 +136,7 @@ def main(fpath, sub, task, run, scores_fpath):
     ax.set_title('Sensor space decoding')
 
     # Save plot
-    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-pitch_' + 'run-' + run + '_stft' + '.png'
+    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-imagine_' + 'run-' + run + '_predict_from_stft' + '.png'
     print('Saving figure to: ' + fig_fpath)
     plt.savefig(fig_fpath)
 

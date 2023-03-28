@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#SBATCH --time=00:45:00 # only need 15 minutes for regular logreg? need like 4 hrs for logregcv, 30 min for logreg no crop
+#SBATCH --time=00:10:00 # only need 15 minutes for regular logreg? need like 4 hrs for logregcv, 30 min for logreg no crop
 #SBATCH --partition=broadwl
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4

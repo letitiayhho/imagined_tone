@@ -16,13 +16,17 @@ from scipy import signal
 from scipy import signal
 from util.io.stft import *
 
-def main(fpath, sub, task, run, save_fpath):
+def main(fpath, sub, task, run, cond, save_fpath):
     FS = 5000
-    CONDITION_FREQS = [50, 100, 150, 200, 250]
+    CONDITION_FREQS = [190, 280]
     
     # Read data
     epochs = mne.read_epochs(fpath)
     epochs = epochs.get_data()
+    if cond == 'heard':
+        epochs = epochs['11', '12']
+    elif cond == 'imagined':
+        epochs = epochs['21', '22']
     
     # Get metadata
     n_freqs = len(CONDITION_FREQS)
@@ -42,15 +46,16 @@ def main(fpath, sub, task, run, save_fpath):
         
     return (Zxxs)
 
-__doc__ = "Usage: ./compute_stft.py <fpath> <sub> <task> <run> <save_fpath>"
+__doc__ = "Usage: ./compute_stft.py <fpath> <sub> <task> <run> <cond> <save_fpath>"
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print(__doc__)
         sys.exit(1)
     FPATH = sys.argv[1]
     SUB = sys.argv[2]
     TASK = sys.argv[3]
-    RUN = sys.argv[4]
+    COND = sys.argv[4]
+    RUN = sys.argv[5]
     SAVE_FPATH = sys.argv[5]
-    main(FPATH, SUB, TASK, RUN, SAVE_FPATH)
+    main(FPATH, SUB, TASK, RUN, COND, SAVE_FPATH)

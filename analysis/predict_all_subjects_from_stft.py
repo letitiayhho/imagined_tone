@@ -35,7 +35,7 @@ def main(subs, skips):
             subject = sub,
             task = task,
             run = run,
-            desc = 'decode_from_wavelets',
+            desc = 'predict_from_stft',
             suffix = 'scores',
             extension = 'npy',
         )
@@ -44,8 +44,8 @@ def main(subs, skips):
             continue
         
         # Decode
-        print('subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s" % (sub, task, run), shell=True)')
-        subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s" % (sub, task, run), shell=True)
+        print('subprocess.check_call("sbatch ./predict_from_stft.py %s %s %s" % (fpath, sub, task, run, scores_fpath), shell=True)')
+        subprocess.check_call("sbatch ./predict_from_stft.py %s %s %s %s %s" % (fpath, sub, task, run, scores_fpah), shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run decode_from_stft.py over given subjects')

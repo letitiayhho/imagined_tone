@@ -7,7 +7,7 @@ from bids import BIDSLayout
 from util.io.bids import DataSink
 from util.io.iter_BIDSPaths import *
 
-def main(subs, skips) -> None:
+def main(subs, skips, cond) -> None:
     BIDS_ROOT = '../data/bids'
     layout = BIDSLayout(BIDS_ROOT, derivatives = True)
     fpaths = layout.get(scope = 'preprocessing',
@@ -25,12 +25,12 @@ def main(subs, skips) -> None:
             task = task,
             run = run,
             desc = 'stft',
-            suffix = 'power',
+            suffix = cond,
             extension = 'npy',
         )
-#         if os.path.isfile(save_fpath):
-#             print(f"Stft already computed for {sub} run {run}")
-#             continue
+        if os.path.isfile(save_fpath):
+            print(f"Stft already computed for {sub} run {run} cond {cond}")
+            continue
         
         # if subs were given but sub is not in subs, don't preprocess
         if bool(subs) and sub not in subs:
@@ -41,11 +41,16 @@ def main(subs, skips) -> None:
             continue
 
         # Get stft
-        print('subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s" % (fpath, sub, task, run, save_fpath), shell=True)')
-        subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s" % (fpath, sub, task, run, save_fpath), shell=True)
+        print('subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s %s" % (fpath, sub, task, run, cond, save_fpath), shell=True)')
+        subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s %s" % (fpath, sub, task, run, cond, save_fpath), shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run compute_stft.py over given subjects')
+    parser.add_argument('cond',
+                        type = str,
+                        nargs = 1,
+                        help = 'condition: heard/imagined',
+                        choices = ['heard', 'imagined'])
     parser.add_argument('--subs', 
                         type = str, 
                         nargs = '*', 
@@ -59,7 +64,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     subs = args.subs
     skips = args.skips
-    print(f"subs: {subs}, skips : {skips}")
+    cond = args.cond
+    print(f"subs: {subs}, skips : {skips}, cond : {cond}")
     if bool(subs) & bool(skips):
         raise ValueError('Cannot specify both subs and skips')
-    main(subs, skips)
+    main(subs, skips, cond)

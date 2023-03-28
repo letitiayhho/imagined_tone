@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#SBATCH --time=00:45:00 # only need 15 minutes for regular logreg? need like 4 hrs for logregcv, 30 min for logreg no crop
+#SBATCH --time=00:10:00 # only need 15 minutes for regular logreg? need like 4 hrs for logregcv, 30 min for logreg no crop
 #SBATCH --partition=broadwl
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
@@ -50,7 +50,19 @@ def main(fpath, sub, task, run, scores_fpath):
     print(epochs_imagined.event_id)
     label_dict_imagined = {10003 : 0, 10004 : 1}
 
-    # Compute power
+    print("---------- Create target array ----------")
+    labels_heard = pd.Series(events_heard[:, 2])
+    y_heard = labels_heard.replace(label_dict_heard)
+    le = preprocessing.LabelEncoder()
+    y_heard = le.fit_transform(y_heard)
+    print(f'y_heard: {y_heard}')
+
+    labels_imagined = pd.Series(events_imagined[:, 2])
+    y_imagined = labels_imagined.replace(label_dict_imagined)
+    le = preprocessing.LabelEncoder()
+    y_imagined = le.fit_transform(y_imagined)
+    print(f'y_heard: {y_imagined}')
+    
     print("---------- Compute power ----------")
     n_cycles = STIM_FREQS / 7 # different number of cycle per frequency
                                # higher constant, fewer windows, maybe?
@@ -103,21 +115,6 @@ def main(fpath, sub, task, run, scores_fpath):
     del epochs_imagined
     gc.collect()
 
-    # Create array of condition labels
-    print("---------- Create target array ----------")
-    labels_heard = pd.Series(events_heard[:, 2])
-    y_heard = labels_heard.replace(label_dict_heard)
-    le = preprocessing.LabelEncoder()
-    y_heard = le.fit_transform(y_heard)
-    print(f'y_heard: {y_heard}')
-
-    labels_imagined = pd.Series(events_imagined[:, 2])
-    y_imagined = labels_imagined.replace(label_dict_imagined)
-    le = preprocessing.LabelEncoder()
-    y_imagined = le.fit_transform(y_imagined)
-    print(f'y_heard: {y_imagined}')
-
-    # Decode
     print("---------- Decode ----------")
     n_stimuli = 2
     metric = 'accuracy'

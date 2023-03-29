@@ -9,7 +9,7 @@ import numpy as np
 from util.io.iter_BIDSPaths import *
 from util.io.bids import DataSink
 
-def main(subs, skips):
+def main(subs, skips, cond):
     BIDS_ROOT = '../data/bids'
     DERIV_ROOT = '../data/bids/derivatives'
 
@@ -35,8 +35,8 @@ def main(subs, skips):
             subject = sub,
             task = task,
             run = run,
-            desc = 'decode_from_wavelets',
-            suffix = 'scores',
+            desc = 'decode_from_stft',
+            suffix = cond,
             extension = 'npy',
         )
         if os.path.isfile(scores_fpath) and sub not in subs:
@@ -44,11 +44,16 @@ def main(subs, skips):
             continue
         
         # Decode
-        print('subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s" % (sub, task, run), shell=True)')
-        subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s" % (sub, task, run), shell=True)
+        print(f'subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s %s %s %s" % ({fpath}, {sub}, {task}, {run}, {cond}, {scores_fpath}), shell=True)')
+        subprocess.check_call("sbatch ./decode_from_stft.py %s %s %s %s %s %s" % (fpath, sub, task, run, cond, scores_fpath), shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run decode_from_stft.py over given subjects')
+    parser.add_argument('cond',
+                        type = str,
+                        nargs = 1,
+                        help = 'condition: imagined or heard',
+                        choices = ['heard', 'imagined'])
     parser.add_argument('--subs', 
                         type = str, 
                         nargs = '*', 
@@ -62,7 +67,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     subs = args.subs
     skips = args.skips
-    print(f"subs: {subs}, skips : {skips}")
+    cond = args.cond[0]
+    print(f"subs: {subs}, skips : {skips}, cond : {cond}")
     if bool(subs) & bool(skips):
         raise ValueError('Cannot specify both subs and skips')
-    main(subs, skips)
+    main(subs, skips, cond)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#SBATCH --time=00:04:00
+#SBATCH --time=00:01:00
 #SBATCH --partition=broadwl
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=16G
@@ -19,31 +19,35 @@ from util.io.stft import *
 def main(fpath, sub, task, run, cond, save_fpath):
     FS = 5000
     CONDITION_FREQS = [190, 280]
-    
+    print(f'cond: {cond}')
+
     # Read data
     epochs = mne.read_epochs(fpath)
-    epochs = epochs.get_data()
     if cond == 'heard':
+        print(cond)
         epochs = epochs['11', '12']
     elif cond == 'imagined':
+        print(cond)
         epochs = epochs['21', '22']
-    
+    print(epochs)
+    epochs = epochs.get_data()
+
     # Get metadata
     n_freqs = len(CONDITION_FREQS)
     n_epochs = np.shape(epochs)[0]
     n_chans = np.shape(epochs)[1]
-    
+
     # Compute stft across all channels
-    Zxxs = np.empty([n_epochs, n_chans, n_freqs, 19]) # n_epochs, n_chans, n_freqs, n_windows
+    Zxxs = np.empty([n_epochs, n_chans, n_freqs, 41]) # n_epochs, n_chans, n_freqs, n_windows
     for chan in range(n_chans):
         x = pd.DataFrame(epochs[:, chan, :])
         f, t, Zxx = get_stft_for_one_channel(x, FS, n_epochs, CONDITION_FREQS)
         Zxxs[:, chan, :, :] = Zxx
 
     # Save powers and events
+    print(np.shape(Zxxs))
     print('Saving scores to: ' + save_fpath)
     np.save(save_fpath, Zxxs)
-        
     return (Zxxs)
 
 __doc__ = "Usage: ./compute_stft.py <fpath> <sub> <task> <run> <cond> <save_fpath>"
@@ -55,7 +59,7 @@ if __name__ == "__main__":
     FPATH = sys.argv[1]
     SUB = sys.argv[2]
     TASK = sys.argv[3]
-    COND = sys.argv[4]
-    RUN = sys.argv[5]
-    SAVE_FPATH = sys.argv[5]
+    RUN = sys.argv[4]
+    COND = sys.argv[5]
+    SAVE_FPATH = sys.argv[6]
     main(FPATH, SUB, TASK, RUN, COND, SAVE_FPATH)

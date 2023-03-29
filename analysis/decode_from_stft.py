@@ -22,27 +22,27 @@ from mne.decoding import SlidingEstimator, cross_val_multiscore
 
 from util.io.bids import DataSink
 
-def main(fpath, sub, task, run, scores_fpath):
+def main(fpath, sub, task, run, cond, scores_fpath):
     BIDS_ROOT = '../data/bids'
     DERIV_ROOT = '../data/bids/derivatives'
     FIGS_ROOT = '../figs'
 
     print("---------- Load data ----------")
     print(fpath)
-    epochs = mne.read_epochs(epochs_fpath)
+    epochs = mne.read_epochs(fpath)
 
     print("---------- Separate heard epochs object ----------")
-    epochs_heard = epochs['11', '12']
-    events_heard = epochs_heard.events
-    
-    print("---------- Create event label dicts ----------")
-    print(epochs_heard.event_id)
-    label_dict_heard = {10001 : 0, 10002 : 1}
+    if cond == 'heard':
+        epochs = epochs['11', '12']
+        label_dict = {10001: 0, 10002: 1}
+    elif cond == 'imagined':
+        epochs = epochs['21', '22']
+        label_dict = {10003 : 0, 10004 : 1}
+    events = epochs.events
     
     print("---------- Create target array ----------")
-    label_dict_heard = {10001 : 0, 10002 : 1}
     labels = pd.Series(events[:, 2])
-    y = labels.replace(label_dict_heard)
+    y = labels.replace(label_dict)
     le = preprocessing.LabelEncoder()
     y = le.fit_transform(y)
     
@@ -54,7 +54,7 @@ def main(fpath, sub, task, run, scores_fpath):
         task = task,
         run = run,
         desc = 'stft',
-        suffix = 'heard',
+        suffix = cond,
         extension = 'npy',
     )
     print(f'Loading stft from {stft_fpath}')
@@ -64,9 +64,9 @@ def main(fpath, sub, task, run, scores_fpath):
     n_epochs = np.shape(Zxxs)[0]
     if n_epochs != np.shape(events)[0]:
         sys.exit('Incorrect number of epochs')
-    n_freqs = 5
+    n_freqs = 2
     n_chans = 62
-    n_windows = 19 # is this true?
+    n_windows = 41
     Zxxs = Zxxs.reshape((n_epochs, n_freqs*n_chans, n_windows)) # n_epochs, n_freqs*n_chans, n_windows
 
     # Decode
@@ -94,15 +94,6 @@ def main(fpath, sub, task, run, scores_fpath):
 
     # Save decoder score_shape
     print("---------- Save decoder scores ----------")
-    sink = DataSink(DERIV_ROOT, 'decoding')
-    scores_fpath = sink.get_path(
-        subject = sub,
-        task = task,
-        run = run,
-        desc = 'stft',
-        suffix = 'heard',
-        extension = 'npy',
-    )
     print('Saving scores to: ' + scores_fpath)
     np.save(scores_fpath, scores)
 
@@ -117,20 +108,23 @@ def main(fpath, sub, task, run, scores_fpath):
     ax.set_title('Sensor space decoding')
 
     # Save plot
-    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-pitch_' + 'run-' + run + '_stft' + '.png'
+    fig_fpath = FIGS_ROOT + '/subj-' + sub + '_' + 'task-imagine_' + 'cond-' + cond + '_decode_from_stft' + '.png'
     print('Saving figure to: ' + fig_fpath)
     plt.savefig(fig_fpath)
 
-__doc__ = "Usage: ./decode_from_stft.py <sub> <task> <run>"
+__doc__ = "Usage: ./decode_from_stft.py <fpath> <sub> <task> <run> <cond> <scores_fpath>"
 
 if __name__ == "__main__":
     print(len(sys.argv))
     print("Argument List:", str(sys.argv))
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 7:
         print(__doc__)
         sys.exit("Incorrect call to script")
     print("Reading args")
-    SUB = sys.argv[1]
-    TASK = sys.argv[2]
-    RUN = sys.argv[3]
-    main(SUB, TASK, RUN)
+    FPATH = sys.argv[1]
+    SUB = sys.argv[2]
+    TASK = sys.argv[3]
+    RUN = sys.argv[4]
+    COND = sys.argv[5]
+    SCORES_FPATH = sys.argv[6]
+    main(FPATH, SUB, TASK, RUN, COND, SCORES_FPATH)

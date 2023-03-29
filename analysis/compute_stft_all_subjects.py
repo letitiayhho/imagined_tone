@@ -7,15 +7,14 @@ from bids import BIDSLayout
 from util.io.bids import DataSink
 from util.io.iter_BIDSPaths import *
 
-def main(subs, skips, cond) -> None:
+def main(cond, force, subs, skips) -> None:
     BIDS_ROOT = '../data/bids'
     layout = BIDSLayout(BIDS_ROOT, derivatives = True)
     fpaths = layout.get(scope = 'preprocessing',
-                    res = 'hi',
                     suffix='epo',
                     extension = 'fif.gz',
                     return_type = 'filename')
-    
+
     for (fpath, sub, task, run) in iter_BIDSPaths(fpaths):
         # Don't run if file already exists
         DERIV_ROOT = '../data/bids/derivatives'
@@ -28,7 +27,7 @@ def main(subs, skips, cond) -> None:
             suffix = cond,
             extension = 'npy',
         )
-        if os.path.isfile(save_fpath):
+        if os.path.isfile(save_fpath) and force == False:
             print(f"Stft already computed for {sub} run {run} cond {cond}")
             continue
         
@@ -41,7 +40,7 @@ def main(subs, skips, cond) -> None:
             continue
 
         # Get stft
-        print('subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s %s" % (fpath, sub, task, run, cond, save_fpath), shell=True)')
+        print(f'subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s %s" % ({fpath}, {sub}, {task}, {run}, {cond}, {save_fpath}), shell=True)')
         subprocess.check_call("sbatch ./compute_stft.py %s %s %s %s %s %s" % (fpath, sub, task, run, cond, save_fpath), shell=True)
 
 if __name__ == "__main__":
@@ -51,6 +50,11 @@ if __name__ == "__main__":
                         nargs = 1,
                         help = 'condition: heard/imagined',
                         choices = ['heard', 'imagined'])
+    parser.add_argument('--force',
+                        type = bool,
+                        nargs = 1,
+                        default = False,
+                        help = 'If true run compute_stft.py even if save_fpath file already exists')
     parser.add_argument('--subs', 
                         type = str, 
                         nargs = '*', 
@@ -62,10 +66,11 @@ if __name__ == "__main__":
                         help = 'subjects NOT to stft for (e.g. 1 9)', 
                         default = [])
     args = parser.parse_args()
+    cond = args.cond[0]
+    force = args.force
     subs = args.subs
     skips = args.skips
-    cond = args.cond
-    print(f"subs: {subs}, skips : {skips}, cond : {cond}")
+    print(f"force : {force}, subs: {subs}, skips : {skips}, cond : {cond}")
     if bool(subs) & bool(skips):
         raise ValueError('Cannot specify both subs and skips')
-    main(subs, skips, cond)
+    main(cond, force, subs, skips)

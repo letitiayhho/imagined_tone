@@ -36,7 +36,7 @@ def main(sub, task, run) -> None:
     # Run ICA on one copy of the data
     print("---------- Run ICA on one copy of the data ----------")
     raw_for_ica = bandpass(raw, None, 1)
-    raw = bandpass(raw, 310, 160)
+    raw = bandpass(raw, 300, 160)
 
     epochs_for_ica = epoch(raw_for_ica, events, event_ids)
     epochs = epoch(raw, events, event_ids)

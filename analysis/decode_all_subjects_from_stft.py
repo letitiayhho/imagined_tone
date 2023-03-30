@@ -9,7 +9,7 @@ import numpy as np
 from util.io.iter_BIDSPaths import *
 from util.io.bids import DataSink
 
-def main(subs, skips, cond):
+def main(cond, force, subs, skips):
     BIDS_ROOT = '../data/bids'
     DERIV_ROOT = '../data/bids/derivatives'
 
@@ -39,7 +39,7 @@ def main(subs, skips, cond):
             suffix = cond,
             extension = 'npy',
         )
-        if os.path.isfile(scores_fpath) and sub not in subs:
+        if os.path.isfile(scores_fpath) and force == False:
             print(f"Subject {sub} run {run} is already preprocessed")
             continue
         
@@ -54,6 +54,11 @@ if __name__ == "__main__":
                         nargs = 1,
                         help = 'condition: imagined or heard',
                         choices = ['heard', 'imagined'])
+    parser.add_argument('--force',
+                        type = bool,
+                        nargs = 1,
+                        default = False,
+                        help = 'If true run decode_from_stft.py even if save_fpath file already exists')
     parser.add_argument('--subs', 
                         type = str, 
                         nargs = '*', 
@@ -65,10 +70,11 @@ if __name__ == "__main__":
                         help = 'subjects NOT to decode (e.g. 1 9)', 
                         default = [])
     args = parser.parse_args()
+    cond = args.cond[0]
+    force = args.force
     subs = args.subs
     skips = args.skips
-    cond = args.cond[0]
-    print(f"subs: {subs}, skips : {skips}, cond : {cond}")
+    print(f"cond : {cond}, force : {force}, subs: {subs}, skips : {skips}")
     if bool(subs) & bool(skips):
         raise ValueError('Cannot specify both subs and skips')
-    main(subs, skips, cond)
+    main(cond, force, subs, skips)
